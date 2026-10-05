@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
+<meta name="theme-color" content="#0b1410"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Виноград-Бум! — техно-демо v03</title>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=1Ok_2SozUjyu2sYc8oJU3G8tY2NdwkzPhFF5Rc8V1ZlIF-W3qBa9Vwte87l3xqr2wsbai6TahJfqdxbiFnoenuCTNYpCKys3hMVaMekUPcSAqCeZ8e7oIEdChsk9llJUAqNJ4tc0QPWFangESs_vMA" charset="UTF-8"></script><style>
+/* ===== Виноград-Бум — стили в духе Мат-Бум (тёмная тема, HUD поверх канваса) ===== */
+:root{
+  --gold:#e8c56a; --emerald:#7be28a; --ink:#e9e4d6; --mut:#9fb0a8;
+  --panel:rgba(16,30,24,.66); --panel-b:rgba(232,197,106,.25);
+  --bg1:#0e1a16; --bg2:#080f0d; --bg3:#04080a;
+  --btnbg:rgba(20,38,30,.82); --btnb:rgba(232,197,106,.4);
+  --hint:#cfe0d6; --hint2:#a8f2c0; --dim:#6f8378; --bad:#ff7a7a;
+  --chrome-h:48px;
+  --obox1:#17261f; --obox2:#0b1410; --mono:#cfe3d6; --monobg:rgba(0,0,0,.3); --rowtxt:#e6f0ea; --glow1:rgba(255,214,140,.10); --glow2:rgba(123,226,138,.09);
+}
+/* светлая тема (как в Мат-Буме 1): только переменные + пара теней */
+html[data-theme="light"]{
+  --gold:#8a6410; --emerald:#2f8f4a; --ink:#1e2a24; --mut:#51645b;
+  --panel:rgba(255,255,255,.72); --panel-b:rgba(138,100,16,.3);
+  --bg1:#f3f0e4; --bg2:#e6ebdf; --bg3:#d6e2d4;
+  --btnbg:rgba(255,255,255,.85); --btnb:rgba(138,100,16,.45);
+  --hint:#35463d; --hint2:#1f7a3c; --dim:#7a8a80; --bad:#c43c3c;
+  --obox1:#fbfaf4; --obox2:#e9eee3; --mono:#2a3a30; --monobg:rgba(0,0,0,.06); --rowtxt:#1e2a24; --glow1:rgba(255,214,140,.35); --glow2:rgba(123,226,138,.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none}
+body{font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;
+  background:
+   radial-gradient(1100px 500px at 50% -10%, var(--glow1), transparent 60%),
+   radial-gradient(800px 600px at 50% 112%, var(--glow2), transparent 60%),
+   linear-gradient(var(--bg1),var(--bg2) 55%,var(--bg3));
+  display:flex;flex-direction:column}
+button{cursor:pointer;border:1px solid var(--btnb);background:var(--btnbg);color:var(--ink);
+  border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;letter-spacing:1px;font-family:inherit}
+button:active{transform:scale(.94)}
+button.ghost{background:transparent}
+button.small{padding:6px 10px;font-size:13px}
+button[hidden]{display:none}
+button.primary{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05;border-color:#ffe9a3;box-shadow:0 0 18px rgba(255,220,120,.45)}
+@media (hover:hover){button:hover{filter:brightness(1.15)}}
+select{font:inherit;font-weight:700;background:var(--btnbg);color:var(--ink);border:1px solid var(--btnb);border-radius:10px;padding:7px 10px}
+/* верхняя панель */
+#chrome{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 12px 2px;height:var(--chrome-h);z-index:7}
+.chrome-c{display:flex;gap:6px;align-items:center}
+.ico-btn{min-width:42px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:16px}
+.ico-btn.off{opacity:.5;text-decoration:line-through}
+/* экраны */
+.screen{position:absolute;left:0;right:0;bottom:0;top:var(--chrome-h);display:none;flex-direction:column;z-index:1}
+.screen.on{display:flex}
+.screen-scroll{flex:1;overflow:auto;padding:10px 16px 24px;-webkit-overflow-scrolling:touch}
+.center{max-width:640px;margin:0 auto;text-align:center}
+.logo{font-weight:900;letter-spacing:3px;font-size:clamp(30px,6vw,54px);color:var(--gold);text-shadow:0 0 22px rgba(232,197,106,.45)}
+.h1sub{font-size:clamp(13px,2.4vw,20px);letter-spacing:4px;color:var(--mut);font-weight:600;margin-top:2px}
+.menu-actions{display:flex;flex-direction:column;gap:12px;margin:22px auto 0;max-width:340px}
+.menu-actions button{font-size:17px;padding:13px 18px;border-radius:16px}
+.hallrow{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:8px 12px;margin:6px auto;max-width:460px;background:var(--panel);border:1px solid var(--panel-b);border-radius:12px;font-size:14px;text-align:left}
+.hallrow .rk{color:var(--dim);font-weight:700}.hallrow .nm{color:var(--rowtxt)}.hallrow .sc{color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}.hallrow .ex{color:var(--hint);font-size:12px}
+.hallrow.empty{grid-template-columns:1fr;color:var(--hint);text-align:center}
+#hallYa h3{color:var(--gold);letter-spacing:2px;font-size:14px;margin:18px 0 6px}
+.cutrow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--mut)}
+.cutrow select{font:inherit;font-weight:700;color:var(--ink);background:var(--btnbg);border:1px solid var(--btnb);border-radius:10px;padding:6px 10px}
+.ver{margin-top:22px;color:var(--dim);font-size:12px;letter-spacing:1px;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--panel-b);border-radius:16px;padding:14px 16px;margin-top:12px;text-align:left}
+.card h2{color:var(--gold);font-size:18px;letter-spacing:1px;margin-bottom:6px}
+.card p,.card li{color:var(--hint);font-size:14px;line-height:1.5}
+.card ul{padding-left:18px}
+.card b{color:var(--gold)}
+h2.scr-title{color:var(--gold);letter-spacing:2px;font-size:clamp(20px,4vw,30px);text-align:center;margin:6px 0 2px}
+.sub{color:var(--mut);font-size:13px;text-align:center}
+.lvlrow{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+/* сетка выбора грозди — как «Выбери колонну» в Мат-Буме */
+.colgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;max-width:700px;margin:14px auto 0}
+.lvcard{position:relative;background:var(--panel);border:1px solid var(--panel-b);border-radius:14px;padding:10px 8px 8px;cursor:pointer;text-align:center;transition:transform .15s}
+.lvcard:active{transform:scale(.96)}
+.lvcard.done{border-color:rgba(123,226,138,.6)}
+.lvcard.next{border-color:var(--gold);box-shadow:0 0 14px rgba(232,197,106,.35)}
+.lvcard .num{position:absolute;left:8px;top:6px;font-size:11px;color:var(--mut);font-weight:700}
+.lvcard .ok{position:absolute;right:8px;top:4px;color:var(--emerald);font-weight:900;font-size:14px}
+.lvcard .pvw{display:flex;justify-content:center;gap:3px;height:44px;align-items:flex-end;margin-top:8px}
+.lvcard .nm{font-size:11px;font-weight:700;color:var(--ink);margin-top:6px;line-height:1.2;min-height:27px}
+.lvcard .ft{display:flex;justify-content:center;gap:3px;margin-top:4px}
+.lvcard .ft svg{width:14px;height:14px}
+.lvcard .best{font-size:10px;color:var(--mut);margin-top:3px;min-height:12px}
+@media (hover:hover){.lvcard:hover{transform:translateY(-2px);filter:brightness(1.12)}}
+/* обучение: плашка шага, как trainPlate в Мат-Буме / «ОБУЧЕНИЕ · ШАГ x/6» в Грави-Буме */
+#trainPlate{display:none;margin:4px auto 0;max-width:520px;background:linear-gradient(rgba(232,197,106,.18),rgba(232,197,106,.08));border:1px solid var(--gold);border-radius:12px;padding:6px 10px;text-align:left;position:relative}
+#trainPlate.on{display:block}
+#trainPlate>b{display:block;color:var(--gold);font-size:11px;letter-spacing:2px}
+#trainPlate span b{color:var(--gold)}
+#trainPlate span{color:var(--ink);font-size:13px;line-height:1.3}
+#trainPlate button{position:absolute;right:6px;top:6px;padding:3px 8px;font-size:11px}
+#dbg{position:fixed;left:6px;bottom:6px;font:11px/1.3 monospace;color:#9f9;background:rgba(0,0,0,.55);padding:4px 6px;border-radius:6px;z-index:30;display:none;pointer-events:none;white-space:pre}
+#dbg.on{display:block}
+.pv{width:22px;height:26px;border-radius:50%/52%;box-shadow:inset -6px -8px 14px rgba(0,0,0,.35),inset 6px 8px 12px rgba(255,255,255,.25)}
+/* игровой экран */
+#scr-game{overflow:hidden}
+#hud{display:flex;gap:6px;align-items:stretch;justify-content:center;padding:2px 10px 0;flex-wrap:nowrap;z-index:5}
+.stat{background:var(--panel);border:1px solid var(--panel-b);border-radius:12px;padding:5px 10px;min-width:64px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.stat b{font-size:18px;color:var(--gold);line-height:1.1}
+.stat span{font-size:10px;letter-spacing:1px;color:var(--mut)}
+#chainSlots{display:flex;gap:4px;justify-content:center;min-height:22px;align-items:center}
+.slot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(232,197,106,.45);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)}
+.slot.full{border-color:var(--emerald);background:rgba(123,226,138,.18);box-shadow:0 0 8px rgba(123,226,138,.5)}
+.slot svg{width:14px;height:14px}
+#pbar{height:5px;margin:5px 12px 0;background:var(--panel);border-radius:3px;overflow:hidden}
+#pbarI{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--emerald));width:0%;transition:width .3s}
+#hint{text-align:center;padding:5px 12px 0;min-height:40px;z-index:5}
+#hint1{color:var(--hint);font-size:13px}
+#hint2{color:var(--hint2);font-size:13px;font-weight:700;margin-top:1px}
+#stage{position:relative;flex:1;min-height:120px;cursor:grab}
+#stage::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 50%,transparent 55%,rgba(0,0,0,.28) 100%)}
+html[data-theme="light"] #stage::after{background:radial-gradient(ellipse 70% 60% at 50% 50%,transparent 55%,rgba(60,80,60,.14) 100%)}
+#stage.grabbing{cursor:grabbing}
+#gl,#fx{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#ctrl{display:flex;justify-content:center;gap:10px;padding:6px 10px 10px;z-index:5}
+#ctrl button{min-width:56px;min-height:44px;font-size:20px;border-radius:14px}
+#ctrl button.txt{font-size:13px;min-width:90px}
+#bAuto.on{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05;border-color:#ffe9a3}
+/* оверлеи */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,8,10,.72);z-index:20;padding:16px}
+.overlay.on{display:flex}
+.obox{background:linear-gradient(var(--obox1),var(--obox2));border:1px solid var(--panel-b);border-radius:20px;padding:22px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.obox h1{color:var(--gold);letter-spacing:2px;font-size:26px;margin-bottom:10px}
+.obox p{color:var(--hint);font-size:14px;line-height:1.5;margin:6px 0}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.tune{text-align:left;margin:8px 0}.tune label{display:flex;justify-content:space-between;font-size:13px;color:var(--hint)}.tune label b{color:var(--gold);font-variant-numeric:tabular-nums}
+.tune input[type=range]{width:100%;accent-color:var(--gold);margin-top:2px}
+#gestLine{white-space:pre-line;text-align:left;margin-top:4px}
+#tuneLine,#gestLine{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--mono);background:var(--monobg);border-radius:8px;padding:6px 8px;user-select:all;-webkit-user-select:all}
+/* всплывающий текст */
+.ftext{position:fixed;transform:translate(-50%,-50%);font-weight:900;font-size:18px;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.7);pointer-events:none;z-index:15;animation:ft 1s ease-out forwards;white-space:nowrap}
+.ftext.big{font-size:28px;color:var(--gold)}
+.ftext.bad{color:var(--bad)}
+@keyframes ft{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+#shaker.shake{animation:shk .45s linear}
+@keyframes shk{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+@media (max-width:420px){.stat{min-width:56px;padding:4px 6px}.stat b{font-size:16px}#hint1{font-size:12px}}
+/* короткий ландшафт (телефон боком): HUD слева колонкой, кнопки справа, подсказка снизу — сцена во всю высоту */
+@media (orientation:landscape) and (max-height:520px){
+  :root{--chrome-h:40px}
+  #chrome{padding:4px 8px 0;height:var(--chrome-h)}
+  #scr-game #hud{position:absolute;left:8px;top:6px;flex-direction:column;gap:6px;z-index:6;padding:0}
+  #scr-game .stat{min-width:70px}
+  #scr-game #pbar{position:absolute;left:8px;right:8px;bottom:4px;margin:0;z-index:6}
+  #scr-game #hint{position:absolute;left:8px;right:8px;bottom:12px;padding:0;min-height:0;z-index:6}
+  #scr-game #ctrl{position:absolute;right:8px;top:50%;transform:translateY(-50%);flex-direction:column;padding:0;z-index:6}
+  #scr-game #ctrl button{min-width:52px;min-height:44px}
+  #scr-game #ctrl button.txt{min-width:52px;font-size:11px;padding:6px}
+  body #cue{bottom:30%;left:26%;max-width:200px}
+}
+html[data-theme="light"] .logo{text-shadow:0 1px 0 #fff,0 0 18px rgba(180,130,20,.35)}
+html[data-theme="light"] .ftext{color:#1e2a24;text-shadow:0 0 10px rgba(255,255,255,.9)}
+html[data-theme="light"] #cue .lbl{text-shadow:0 0 6px #fff}
+html[data-theme="light"] .overlay{background:rgba(230,236,226,.7)}
+html[data-theme="light"] #trainPlate{background:rgba(255,255,255,.8)}
+html[data-theme="light"] #bAuto.on{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05}
+@media (prefers-reduced-motion:reduce){#cue .hand{animation:none}#shaker{animation:none!important}.ftext{animation-duration:.4s}}
+button:focus-visible,.lvcard:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* подсказка-жест при первом запуске */
+#cue{position:absolute;left:50%;bottom:9%;transform:translate(-50%,0);pointer-events:none;z-index:4;display:none;text-align:center;color:var(--hint)}
+#cue.on{display:block}
+#cue .hand{font-size:40px;display:inline-block;animation:cue 2.6s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(0,0,0,.8))}
+#cue .lbl{font-size:12px;letter-spacing:1px;margin-top:4px;text-shadow:0 0 6px #000}
+@keyframes cue{0%{transform:translateX(-50px)}40%{transform:translateX(50px)}55%{transform:translateX(50px) scale(1)}62%{transform:translateX(-40px) rotate(-30deg) scale(1.15)}75%{transform:translateX(-50px) rotate(0) scale(1)}100%{transform:translateX(-50px)}}
+</style>
+</head>
+<body>
+
+<div id="chrome"><div class="chrome-c">
+  <button class="ghost small" id="btn-back" type="button" hidden data-t="back">← Меню</button>
+  <button class="ghost small ico-btn" id="btn-sound" type="button" title="Звук">🔊</button>
+  <button class="ghost small ico-btn" id="btn-help" type="button" title="Справка">?</button>
+  <button class="ghost small ico-btn" id="btn-theme" type="button" title="Тема">☀</button>
+  <button class="ghost small ico-btn" id="btn-lang" type="button" title="Language"><span id="langLbl">EN</span></button>
+</div></div>
+
+<!-- ===== Стартовый экран ===== -->
+<section class="screen on" id="scr-start"><div class="screen-scroll"><div class="center" style="padding-top:4vh">
+  <div class="logo" data-t="logo">ВИНОГРАД-БУМ!</div>
+  <div class="h1sub" data-t="sub">ОЧИСТЬ ГРОЗДЬ ОТ ЯГОД</div>
+  <div class="menu-actions" style="margin-top:16px">
+    <button class="primary" id="b-play" type="button" data-t="play">▶ ИГРАТЬ</button>
+    <button id="b-train" type="button" data-t="train">ОБУЧЕНИЕ</button>
+    <button id="b-hall" type="button" data-t="hall">ЗАЛ СЛАВЫ</button>
+    <button id="b-help" type="button" data-t="help">СПРАВКА</button>
+  </div>
+  <div class="cutrow"><label for="sel-cut" data-t="cutLbl">Порог скорости реза</label>
+    <select id="sel-cut"><option value="0.35">Низкий — резать легко</option><option value="0.55">Средний</option><option value="0.9">Высокий — только резкий взмах</option></select></div>
+  <p class="sub" style="margin-top:18px;letter-spacing:2px" data-t="choose">ВЫБЕРИ ГРОЗДЬ</p>
+  <div class="colgrid" id="colgrid"></div>
+  <p class="ver" id="progLine">ТЕХНО-ДЕМО · 10 гроздей · 3 слоя в каждой<br>Медленно тяни — вращай. Быстро проведи — режь.</p>
+</div></div></section>
+
+<!-- ===== Справка ===== -->
+<section class="screen" id="scr-help"><div class="screen-scroll"><div class="center">
+  <h2 class="scr-title" data-t="help">СПРАВКА</h2>
+  <div id="helpBody"></div>
+  <div class="btns"><button id="help-back" type="button" data-t="backBtn">Назад</button></div>
+</div></div></section>
+
+<section class="screen" id="scr-hall"><div class="screen-scroll"><div class="center">
+  <h2 class="scr-title" data-t="hall">ЗАЛ СЛАВЫ</h2>
+  <p class="sub" data-t="hallSub">Твои рекорды по гроздям</p>
+  <div id="hallList"></div>
+  <p class="sub" id="hallTotal" style="margin-top:12px"></p>
+  <div id="hallYa"></div>
+  <div class="btns"><button id="hall-back" type="button" data-t="backBtn">Назад</button></div>
+</div></div></section>
+
+<!-- ===== Игра ===== -->
+<section class="screen" id="scr-game">
+ <div id="shaker" style="display:contents">
+  <div id="hud">
+    <div class="stat"><b id="stLayer">1/3</b><span data-t="layer">СЛОЙ</span></div>
+    <div class="stat"><b id="stBerries">0</b><span data-t="berries">ЯГОД</span></div>
+    <div class="stat" style="min-width:92px"><div id="chainSlots"><i class="slot"></i><i class="slot"></i><i class="slot"></i></div><span data-t="triple">ТРОЙКА</span></div>
+    <div class="stat"><b id="stTime">0:00</b><span data-t="time">ВРЕМЯ</span></div>
+  </div>
+  <div id="pbar"><i id="pbarI"></i></div>
+  <div id="hint"><div id="hint1" data-t="hint1">Медленно тяни — вращай · Быстро проведи — режь</div><div id="hint2"></div><div id="trainPlate"><b id="trStep"></b><span id="trText"></span><button id="trSkip" type="button" class="ghost" data-t="skip">Пропустить</button></div></div>
+  <div id="stage"><canvas id="gl"></canvas><canvas id="fx"></canvas><div id="cue"><span class="hand">☝️</span><div class="lbl" data-t="cue">медленно — вращай · быстро — режь</div></div></div>
+  <div id="ctrl">
+    <button id="bL" type="button" title="Повернуть влево">⟲</button>
+    <button id="bPause" type="button" class="txt" data-t="pause">ПАУЗА</button>
+    <button id="bAuto" type="button" class="txt" data-t="auto" title="Авто-демо">⚡ АВТО</button>
+    <button id="bR" type="button" title="Повернуть вправо">⟳</button>
+  </div>
+ </div>
+</section>
+
+<div id="dbg"></div>
+<div class="overlay" id="ov-pause"><div class="obox">
+  <h1 data-t="pause">ПАУЗА</h1>
+  <div class="btns"><button id="p-resume" type="button" class="primary" data-t="resume">Продолжить</button><button id="p-exit" type="button" class="ghost" data-t="menu">В меню</button><button id="p-tune" type="button" class="ghost" data-t="tune">⚙ Настройка</button></div>
+</div></div>
+
+<div class="overlay" id="ov-tune"><div class="obox">
+  <h1 data-t="tuneTitle">НАСТРОЙКА</h1>
+  <p data-t="tuneSub">Подберите значения на своём телефоне и пришлите строку снизу.</p>
+  <div class="tune"><label><span data-t="tCut">Порог реза, px/мс</span><b id="v-cut"></b></label><input type="range" id="r-cut" min="0.3" max="1.6" step="0.05"></div>
+  <div class="tune"><label><span data-t="tMin">Мин. длина свайпа, px</span><b id="v-min"></b></label><input type="range" id="r-min" min="10" max="50" step="2"></div>
+  <div class="tune"><label><span data-t="tSize">Размер ягод</span><b id="v-size"></b></label><input type="range" id="r-size" min="0.75" max="1.35" step="0.05"></div>
+  <div class="tune"><label><span data-t="tRot">Чувствительность вращения</span><b id="v-rot"></b></label><input type="range" id="r-rot" min="0.2" max="0.8" step="0.05"></div>
+  <div class="tune"><label><span data-t="tDamp">Инерция</span><b id="v-damp"></b></label><input type="range" id="r-damp" min="0.85" max="0.98" step="0.01"></div>
+  <p id="tuneLine" class="mono"></p>
+  <p id="gestLine" class="mono"></p>
+  <div class="btns"><button id="t-reset" type="button" class="ghost" data-t="tReset">Сброс</button><button id="t-copy" type="button" class="ghost" data-t="tCopy">Скопировать</button><button id="t-back" type="button" class="primary" data-t="backBtn">← Назад</button></div>
+</div></div>
+
+<div class="overlay" id="ov-win"><div class="obox">
+  <h1 data-t="cleared">ГРОЗДЬ ОЧИЩЕНА!</h1>
+  <p id="win-info"></p>
+  <div class="btns"><button id="w-menu" type="button" class="ghost" data-t="menu">В меню</button><button id="w-again" type="button" data-t="again">Ещё раз</button><button id="w-next" type="button" class="primary" data-t="next">Дальше →</button></div>
+</div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   ВИНОГРАД-БУМ · техно-демо
+   Стек — как в Мат-Бум 1/2: чистый WebGL1 (без библиотек), HTML/CSS HUD,
+   частицы и след ножа — на 2D-канвасе поверх, звук — синтез WebAudio.
+   Жесты — как в Грави-Бум: один pointer-поток, режим жеста фиксируется
+   по скорости ('rot' — вращение/наклон, 'cut' — разрез).
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const MOBILE=matchMedia('(pointer:coarse)').matches||/Android|iPhone|iPad/i.test(navigator.userAgent);
+const VERSION='03';
+
+/* ---------- настройки геймплея (всё в одном месте для тюнинга) ---------- */
+const CFG={
+  CUT_SPEED:0.35,    // px/мс — порог реза (из версии 02: Низкий .35 / Средний .55 / Высокий .9); ниже .8·порога — вращение
+  CUT_MIN:20,        // px — короче: случайное касание
+  CUT_PRESETS:[0.35,0.55,0.9], // режимы «Низкий — резать легко» / «Средний» / «Высокий — только резкий взмах»
+  ROT_K:0.45,        // град/px — как в Мат-Бум
+  TILT_K:0.22, TILT_MAX:40,
+  DAMP:0.94,         // инерция вращения (за кадр), как в Мат-Бум
+  CLOSE_MS:5000,     // ошибка: ягода закрыта 5 с
+  RAISE_N:4,         // тройка повышает 4 ягоды
+  LAYERS:[23,21,16], // ягод на слой по умолчанию (60; 23 и 16 — чтобы сработал пересчёт); уровни 4+ — см. LEVELS.layers
+  SIZE:[.85,.92,1],  // размер по спелости
+  FOV:25*Math.PI/180,
+  SIZE_MUL:1         // общий множитель размера ягод (панель настройки)
+};
+const FEATS=[
+ {id:'dew', name:'роса',     who:'с росой',
+  svg:'<svg viewBox="0 0 20 20"><path d="M10 2 C7 7 4 10 4 13 a6 6 0 0 0 12 0 c0-3-3-6-6-11z" fill="#cfefff"/><circle cx="8" cy="13" r="1.5" fill="#fff"/></svg>'},
+ {id:'seed',name:'косточки',who:'с косточками',
+  svg:'<svg viewBox="0 0 20 20"><ellipse cx="7" cy="10" rx="2.6" ry="4.2" fill="#3b2314" transform="rotate(-15 7 10)"/><ellipse cx="13" cy="10" rx="2.6" ry="4.2" fill="#3b2314" transform="rotate(15 13 10)"/></svg>'},
+ {id:'bub', name:'пузырьки',who:'с пузырьками',
+  svg:'<svg viewBox="0 0 20 20" fill="none" stroke="#d8f4ff" stroke-width="1.6"><circle cx="7" cy="13" r="3"/><circle cx="13" cy="8" r="2.4"/><circle cx="12" cy="15" r="1.4"/></svg>'}
+];
+/* Палитры 10 уровней из концепции (демо использует геометрию одного уровня, меняется только палитра/признаки/спелость) */
+const LEVELS=[
+ {n:1, name:'Белый (Thompson)',en:'White (Thompson)',          cols:[[.46,.82,.40]],                 flesh:[.80,.95,.66], juice:'170,235,120', feats:[0],     dist:[.6,.25,.15], elong:1.12, dens:1.0},
+ {n:2, name:'Чёрный (Isabel)',en:'Black (Isabella)',           cols:[[.40,.15,.55]],                 flesh:[.78,.55,.80], juice:'170,70,200',  feats:[0,1],   dist:[.6,.25,.15], elong:1.08, dens:1.0},
+ {n:3, name:'Чёрно-белый',en:'Black & White',               cols:[[.22,.10,.30],[.85,.88,.62]],   flesh:[.85,.80,.70], juice:'200,150,210', feats:[1,2],   dist:[.6,.25,.15], elong:1.1,  dens:1.0},
+ {n:4, name:'Дамские пальчики белый',en:"Lady's Fingers White",    cols:[[.92,.86,.45]],                 flesh:[.97,.95,.75], juice:'240,230,140', feats:[0,2],   dist:[.5,.3,.2],   elong:1.45, dens:.92, layers:[24,22,18]},
+ {n:5, name:'Дамские пальчики красный',en:"Lady's Fingers Red",  cols:[[.90,.42,.58]],                 flesh:[.98,.78,.85], juice:'240,120,160', feats:[1,0],   dist:[.5,.3,.2],   elong:1.45, dens:.92, layers:[24,22,18]},
+ {n:6, name:'Дамские пальчики красно-белый',en:"Lady's Fingers Red-White",cols:[[.90,.42,.58],[.92,.88,.62]],flesh:[.98,.85,.85], juice:'240,150,170', feats:[2,1],   dist:[.5,.3,.2],   elong:1.4,  dens:.92, layers:[24,22,18]},
+ {n:7, name:'Радужный виноград',en:'Rainbow Grapes',         cols:[[.9,.3,.3],[.95,.6,.2],[.9,.85,.3],[.4,.8,.4],[.3,.6,.9],[.6,.35,.8]],flesh:[.95,.9,.8],juice:'255,200,120',feats:[0,1,2],dist:[.4,.35,.25],elong:1.12,dens:.9, layers:[24,23,19]},
+ {n:8, name:'Японский рубиновый римский',en:'Ruby Roman (Japan)',cols:[[.65,.10,.22]],                 flesh:[.95,.65,.70], juice:'220,60,90',   feats:[1,2],   dist:[.4,.35,.25], elong:1.0,  dens:.9,  size:1.08, layers:[24,23,19]},
+ {n:9, name:'Пузатые звёздочки',en:'Chubby Stars',         cols:[[.70,.55,.92]],                 flesh:[.92,.88,1],   juice:'200,180,255', feats:[0,1],   dist:[.4,.35,.25], elong:0.95, dens:.86, shape:2, layers:[24,24,20]},
+ {n:10,name:'Сердечки',en:'Hearts',                  cols:[[.98,.45,.65],[.95,.6,.75]],    flesh:[1,.85,.9],    juice:'255,140,180', feats:[0,1,2], dist:[.4,.35,.25], elong:1.2,  dens:.86, shape:1, layers:[24,24,20]},
+];
+
+/* =============== локализация RU/EN (словарь + T(), как в Мат-Бум) =============== */
+const I18N={
+ru:{logo:'ВИНОГРАД-БУМ!',title:'Виноград-Бум! — техно-демо v03',back:'← Меню',sub:'ОЧИСТЬ ГРОЗДЬ ОТ ЯГОД',play:'▶ ИГРАТЬ',train:'ОБУЧЕНИЕ',help:'СПРАВКА',choose:'ВЫБЕРИ ГРОЗДЬ',backBtn:'Назад',
+ layer:'СЛОЙ',berries:'ЯГОД',triple:'ТРОЙКА',time:'ВРЕМЯ',hint1:'Медленно тяни — вращай · Быстро проведи — режь',cue:'медленно — вращай · быстро — режь',
+ cutLbl:'Порог скорости реза',cutLow:'Низкий — резать легко',cutMid:'Средний',cutHigh:'Высокий — только резкий взмах',hall:'ЗАЛ СЛАВЫ',hallSub:'Твои рекорды по гроздям · очки = 500 + секунды в запасе − 10 за ошибку',hallEmpty:'Пока нет рекордов — очисти первую гроздь!',hallTotal:'Всего очков: {n} · пройдено {a}/{b}',hallOnline:'ОНЛАЙН-РЕКОРДЫ',hallAuto:'(с ⚡ АВТО — не в зачёт)',hallPts:'{n} очк.',winPts:'Очки: <b style="color:var(--gold)">{p}</b>{rec}',winRec:'<b style="color:#7ef0b2">новый рекорд!</b>',skip:'Пропустить',pause:'ПАУЗА',auto:'⚡ АВТО',tune:'⚙ Настройка',tuneTitle:'НАСТРОЙКА',tuneSub:'Подберите значения на своём телефоне и пришлите строку снизу.',tCut:'Порог реза, px/мс',tMin:'Мин. длина свайпа, px',tSize:'Размер ягод',tRot:'Чувствительность вращения',tDamp:'Инерция',tReset:'Сброс',tCopy:'Скопировать',gRot:'↻ вращения (px/мс):',gCut:'✂ резы (· = промах):',gSug:'→ порог между ними:',resume:'Продолжить',menu:'В меню',cleared:'ГРОЗДЬ ОЧИЩЕНА!',again:'Ещё раз',next:'Дальше →',
+ progLine:'Пройдено гроздей: <b style="color:var(--gold)">{n}/{m}</b> · ТЕХНО-ДЕМО<br>Медленно тяни — вращай. Быстро проведи — режь.',
+ best:'лучшее {t}',tutStep:'ОБУЧЕНИЕ · ШАГ {a}/{b}',
+ hintChain:'Собрано {n}/3 — ищи спелую {who}',hintFind:'Найди 3 спелые ягоды с одинаковым признаком ({fs})',
+ winInfo:'Сорт: <b>{name}</b><br>Время {t} · разрезов {c} · троек {tr} · ошибок {m}',
+ ftTriple:'ТРОЙКА!',ftReset:'ТРОЙКА СБРОШЕНА',ftRaw:'сырая',ftOther:'другой признак',ftLayer:'СЛОЙ {n} ОТКРЫТ',
+ feat:['роса','косточки','пузырьки'],who:['с росой','с косточками','с пузырьками'],
+ tut:['Поверни гроздь: <b>медленно</b> потяни пальцем влево или вправо.','Наклони гроздь: медленно потяни вверх или вниз.',
+  'Спелые ягоды — яркие и крупные, внутри светится признак. <b>Быстро проведи</b> по подсвеченной ягоде.',
+  'Отлично! Разрежь ещё две с <b>таким же</b> признаком. Ошибка не страшна — ягода лишь закроется на 5 секунд.',
+  'Тройка! Лишние ягоды растворились, четыре дозрели. Очисти весь слой.','Проснулся следующий слой. Очисти все три — и гроздь твоя. Удачи!'],
+ helpHtml:`<div class="card"><h2>Цель</h2><p>Очисти гроздь: три слоя ягод. Активен внешний слой, внутренние «спят» (тусклые) и просыпаются по очереди.</p></div>
+  <div class="card"><h2>Управление</h2><ul><li><b>Медленное</b> движение пальца/мыши — вращение грозди (влево-вправо) и наклон (вверх-вниз).</li>
+  <li><b>Быстрое</b> движение (взмах) — разрез. Одно движение режет одну ягоду. Направление взмаха задаёт раскол: вертикаль, горизонталь или диагонали.</li>
+  <li>Кнопки ⟲ ⟳ подкручивают гроздь. Кнопка <b>ОБУЧЕНИЕ</b> в меню — пошаговая тренировка на первой грозди.</li></ul></div>
+  <div class="card"><h2>Правила</h2><ul><li>Резать можно только <b>спелые</b> ягоды — яркие, крупные, со светящимся признаком внутри: <b>роса</b>, <b>косточки</b> или <b>пузырьки</b>.</li>
+  <li>Собери <b>тройку</b>: три спелые ягоды с одинаковым признаком, по одной за взмах. Порядок не важен.</li>
+  <li>Ошибка (сырая ягода или чужой признак) — ягода «закрывается» на 5 секунд. Прогресс тройки сохраняется.</li>
+  <li>После тройки: лишние ягоды слоя (остаток от деления на 3) растворяются, затем <b>4 случайные ягоды</b> дозревают на одну ступень.</li>
+  <li>Слой пуст — просыпается следующий. Три слоя — гроздь очищена!</li></ul></div>`},
+en:{logo:'VINE-BOOM!',title:'Vine-Boom! — tech demo v03',back:'← Menu',sub:'CLEAR THE BUNCH',play:'▶ PLAY',train:'TUTORIAL',help:'HELP',choose:'PICK A BUNCH',backBtn:'Back',
+ layer:'LAYER',berries:'BERRIES',triple:'TRIPLE',time:'TIME',hint1:'Drag slowly — rotate · Swipe fast — slice',cue:'slow — rotate · fast — slice',
+ cutLbl:'Cut speed threshold',cutLow:'Low — easy to slash',cutMid:'Medium',cutHigh:'High — only a sharp flick',hall:'HALL OF FAME',hallSub:'Your records per bunch · points = 500 + spare seconds − 10 per mistake',hallEmpty:'No records yet — clear your first bunch!',hallTotal:'Total points: {n} · cleared {a}/{b}',hallOnline:'ONLINE RECORDS',hallAuto:'(with ⚡ AUTO — not ranked)',hallPts:'{n} pts',winPts:'Points: <b style="color:var(--gold)">{p}</b>{rec}',winRec:'<b style="color:#7ef0b2">new record!</b>',skip:'Skip',pause:'PAUSE',auto:'⚡ AUTO',tune:'⚙ Tuning',tuneTitle:'TUNING',tuneSub:'Find values that feel right on your phone and send the line below.',tCut:'Cut threshold, px/ms',tMin:'Min swipe length, px',tSize:'Berry size',tRot:'Rotation sensitivity',tDamp:'Inertia',tReset:'Reset',tCopy:'Copy',gRot:'↻ rotations (px/ms):',gCut:'✂ cuts (· = miss):',gSug:'→ threshold between them:',resume:'Resume',menu:'Menu',cleared:'BUNCH CLEARED!',again:'Again',next:'Next →',
+ progLine:'Bunches cleared: <b style="color:var(--gold)">{n}/{m}</b> · TECH DEMO<br>Drag slowly to rotate. Swipe fast to slice.',
+ best:'best {t}',tutStep:'TUTORIAL · STEP {a}/{b}',
+ hintChain:'{n}/3 collected — find a ripe one {who}',hintFind:'Find 3 ripe berries with the same mark ({fs})',
+ winInfo:'Variety: <b>{name}</b><br>Time {t} · slices {c} · triples {tr} · mistakes {m}',
+ ftTriple:'TRIPLE!',ftReset:'TRIPLE RESET',ftRaw:'unripe',ftOther:'wrong mark',ftLayer:'LAYER {n} OPEN',
+ feat:['dew','seeds','bubbles'],who:['with dew','with seeds','with bubbles'],
+ tut:['Rotate the bunch: drag <b>slowly</b> left or right.','Tilt the bunch: drag slowly up or down.',
+  'Ripe berries are bright and big, with a glowing mark inside. <b>Swipe fast</b> across the highlighted berry.',
+  'Great! Slice two more with the <b>same</b> mark. Mistakes are fine — the berry just closes for 5 seconds.',
+  'Triple! Extra berries dissolved, four ripened. Clear the whole layer.','The next layer woke up. Clear all three and the bunch is yours. Good luck!'],
+ helpHtml:`<div class="card"><h2>Goal</h2><p>Clear the bunch: three layers of berries. The outer layer is active; inner layers "sleep" (dim) and wake up one by one.</p></div>
+  <div class="card"><h2>Controls</h2><ul><li><b>Slow</b> finger/mouse movement rotates the bunch (left-right) and tilts it (up-down).</li>
+  <li><b>Fast</b> movement (a swipe) slices. One swipe cuts one berry. Swipe direction sets the split: vertical, horizontal or diagonal.</li>
+  <li>⟲ ⟳ buttons spin the bunch. <b>TUTORIAL</b> in the menu is a step-by-step practice on the first bunch.</li></ul></div>
+  <div class="card"><h2>Rules</h2><ul><li>Only <b>ripe</b> berries can be sliced — bright, big, with a glowing mark inside: <b>dew</b>, <b>seeds</b> or <b>bubbles</b>.</li>
+  <li>Collect a <b>triple</b>: three ripe berries with the same mark, one per swipe. Order doesn't matter.</li>
+  <li>A mistake (unripe berry or a different mark) "closes" the berry for 5 seconds. Triple progress is kept.</li>
+  <li>After a triple: extra berries of the layer (remainder mod 3) dissolve, then <b>4 random berries</b> ripen one step.</li>
+  <li>Layer empty — the next one wakes up. Three layers — the bunch is cleared!</li></ul></div>`}
+};
+let LANG='ru';try{const v=localStorage.getItem('vb_lang');if(v==='en'||v==='ru')LANG=v;else if(!/^ru/i.test(navigator.language||''))LANG='en';}catch(e){}
+function T(k,vars){let t=(I18N[LANG]&&I18N[LANG][k])??I18N.ru[k]??k;if(vars)for(const v in vars)t=t.split('{'+v+'}').join(vars[v]);return t;}
+function applyLang(){{const sel=$('sel-cut');if(sel){['cutLow','cutMid','cutHigh'].forEach((k,i)=>sel.options[i].textContent=T(k));}}document.documentElement.lang=LANG;document.title=T('title');$('langLbl').textContent=LANG==='ru'?'EN':'RU';
+ document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=T(el.dataset.t);});
+ $('helpBody').innerHTML=T('helpHtml');
+ if(typeof buildGrid==='function')buildGrid();if(typeof updateHUD==='function'&&running)updateHUD();if(TUT&&TUT.on)TUT.show();}
+function setLang(l){LANG=l;try{localStorage.setItem('vb_lang',l);}catch(e){}applyLang();}
+
+/* =============== звук: синтез WebAudio (как в Мат-Бум) =============== */
+let AC=null,master=null,sndOn=true;
+try{sndOn=localStorage.getItem('vb_sound')!=='off';}catch(e){}
+function audio(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain();master.gain.value=sndOn?.5:0;master.connect(AC.destination);} if(AC.state==='suspended')AC.resume(); }
+function tone(f,dur,type,vol,slide,delay){ if(!sndOn||!AC)return; const t=AC.currentTime+(delay||0);
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02); }
+function noise(dur,vol,hp,delay){ if(!sndOn||!AC)return; const n=AC.sampleRate*dur|0,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=hp||800;
+  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(master);s.start(AC.currentTime+(delay||0)); }
+const S={
+ click:()=>tone(950,.05,'square',.07),
+ pop:i=>{tone(520+i*140,.09,'sine',.22,380+i*100);noise(.05,.09,2500)},            // «поп»
+ whoosh:()=>{noise(.16,.09,1500);tone(900,.14,'sine',.05,300)},                      // «фьють» — мимо
+ puf:()=>{tone(170,.25,'sine',.18,70);noise(.18,.1,300)},                            // «пуф» — ошибка
+ triple:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.16,0,i*.07));noise(.3,.08,2500,.2)}, // восходящий
+ vzhuh:()=>{noise(.3,.1,500);tone(260,.3,'sine',.09,1400)},                          // «вжух» — сброс
+ raise:()=>{tone(880,.18,'triangle',.1);tone(1320,.25,'triangle',.09,0,.08)},         // повышение
+ layer:()=>{[392,494,587,784].forEach((f,i)=>tone(f,.5,'triangle',.14,0,i*.04));},
+ fanfare:()=>{[392,392,392,523,659,784].forEach((f,i)=>tone(f,i<3?.12:.4,'sawtooth',.14,0,i*.13));[1047,1319,1568].forEach((f,i)=>tone(f,.5,'triangle',.11,0,.8+i*.1));}
+};
+document.addEventListener('pointerdown',audio,{passive:true});
+function buzz(p){if(!MOBILE)return;try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
+function setSound(on){sndOn=!!on;try{localStorage.setItem('vb_sound',on?'on':'off');}catch(e){} if(master)master.gain.value=on?.5:0;
+  $('btn-sound').classList.toggle('off',!on);}
+
+/* =============== платформа: Яндекс Игры (обвязка из Мат-Бум, офлайн-фолбэк) ===============
+   Локально (file:) и без SDK — гостевой режим, ничего не ломается. На портале: LoadingAPI.ready,
+   GameplayAPI start/stop, пауза по game_api_pause, интерстишл на естественной паузе (после грозди). */
+const PLAT={ysdk:null,player:null,ready:false};let gpWanted=false,gpMarked=false;
+function loadSdk(ms){if(window.YaGames&&window.YaGames.init)return Promise.resolve(window.YaGames);
+ return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='/sdk.js';sc.async=true;
+  const t=setTimeout(()=>rej(new Error('sdk timeout')),ms||6000);
+  sc.onload=()=>{clearTimeout(t);window.YaGames?res(window.YaGames):rej(new Error('no YaGames'));};
+  sc.onerror=()=>{clearTimeout(t);rej(new Error('sdk load failed'));};document.head.appendChild(sc);});}
+function syncGameplay(){const api=PLAT.ysdk&&PLAT.ysdk.features&&PLAT.ysdk.features.GameplayAPI;if(!api)return;
+ const should=gpWanted&&running&&!paused;try{if(should&&!gpMarked){api.start();gpMarked=true;}else if(!should&&gpMarked){api.stop();gpMarked=false;}}catch(e){}}
+function gameReady(){try{PLAT.ysdk&&PLAT.ysdk.features&&PLAT.ysdk.features.LoadingAPI&&PLAT.ysdk.features.LoadingAPI.ready();}catch(e){}}
+async function initPlatform(){
+ try{if(location.protocol==='file:')return;await loadSdk();PLAT.ysdk=await window.YaGames.init();
+  if(PLAT.ysdk.on){PLAT.ysdk.on('game_api_pause',()=>{if(running&&!paused)togglePause(true);});PLAT.ysdk.on('game_api_resume',()=>{});}
+  try{const env=PLAT.ysdk.environment&&PLAT.ysdk.environment.i18n;let saved=null;try{saved=localStorage.getItem('vb_lang');}catch(e){}
+   if(!saved&&env&&env.lang)setLang(/^ru/i.test(env.lang)?'ru':'en');}catch(e){}
+  try{PLAT.player=await PLAT.ysdk.getPlayer({scopes:false});await loadCloud();}catch(e){PLAT.player=null;}
+ }catch(e){PLAT.ysdk=null;}
+ PLAT.ready=true;gameReady();}
+function showInterstitial(){if(!PLAT.ysdk||!PLAT.ysdk.adv)return Promise.resolve(false);
+ const m=master&&master.gain.value;if(master)master.gain.value=0;const back=()=>{if(master)master.gain.value=sndOn?.5:0;};
+ return new Promise(res=>{try{PLAT.ysdk.adv.showFullscreenAdv({callbacks:{onClose:()=>{back();res(true);},onError:()=>{back();res(false);},onOffline:()=>{back();res(false);}}});}catch(e){back();res(false);}});}
+
+/* ---------- прогресс: localStorage + облако Яндекса (cloudSave/cloudLoad из Мат-Бума) ---------- */
+let PROG={done:{}};
+try{const v=JSON.parse(localStorage.getItem('vb_prog')||'null');if(v&&v.done)PROG=v;}catch(e){}
+function saveProg(){try{localStorage.setItem('vb_prog',JSON.stringify(PROG));}catch(e){}
+ if(PLAT.player){try{PLAT.player.setData({vineboom:PROG},true).catch(()=>{});}catch(e){}}}
+/* очки за гроздь: 500 + запас времени (до 600 с) − 10 за ошибку; минимум 100. Для Яндекс-лидерборда — сумма лучших по всем гроздям */
+function lvScore(rec){return Math.max(100,500+Math.max(0,600-rec.time)-rec.mist*10);}
+function totalScore(){let t=0;for(const k in PROG.done)if(!PROG.done[k].auto)t+=lvScore(PROG.done[k]);return t;}
+async function lbSubmit(score){if(!PLAT.ysdk||!PLAT.ysdk.getLeaderboards)return;try{const lb=await PLAT.ysdk.getLeaderboards();await lb.setLeaderboardScore('main',score);}catch(e){}}
+async function lbTop(n){if(!PLAT.ysdk||!PLAT.ysdk.getLeaderboards)return null;try{const lb=await PLAT.ysdk.getLeaderboards();
+ const r=await lb.getLeaderboardEntries('main',{quantityTop:n||5,includeUser:true,quantityAround:2});
+ return r.entries.map(e=>({name:(e.player&&e.player.publicName)||'?',score:e.score}));}catch(e){return null;}}
+async function loadCloud(){if(!PLAT.player)return;try{const d=await PLAT.player.getData();const c=d&&d.vineboom;
+ if(c&&c.done){for(const k in c.done){const a=PROG.done[k],b=c.done[k];if(!a||b.time<a.time)PROG.done[k]=b;}saveProg();buildGrid();}}catch(e){}}
+function recordWin(n,rec){const old=PROG.done[n];
+ /* честный рекорд всегда важнее авто-прохождения; среди честных — больше очков */
+ if(!old||(old.auto&&!rec.auto)||(old.auto===rec.auto&&lvScore(rec)>lvScore(old)))PROG.done[n]=rec;
+ saveProg();buildGrid();if(!rec.auto)lbSubmit(totalScore());}
+function nextLevelIdx(){for(let i=0;i<LEVELS.length;i++)if(!PROG.done[LEVELS[i].n])return i;return 0;}
+
+/* =============== матрицы (column-major, как в Мат-Бум) =============== */
+function mI(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
+function mMul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s;}return o;}
+function mPersp(fov,asp,n,f){const t=1/Math.tan(fov/2);return new Float32Array([t/asp,0,0,0,0,t,0,0,0,0,(f+n)/(n-f),-1,0,0,2*f*n/(n-f),0])}
+function mRotX(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([1,0,0,0,0,c,s,0,0,-s,c,0,0,0,0,1])}
+function mRotY(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1])}
+function mRotZ(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1])}
+function mTrans(x,y,z){const m=mI();m[12]=x;m[13]=y;m[14]=z;return m}
+function mScale(x,y,z){const m=mI();m[0]=x;m[5]=y;m[10]=z;return m}
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v),easeOut=p=>1-Math.pow(1-p,3),smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+function mRotAxis(ax,a){const [x,y,z]=ax,c=Math.cos(a),s=Math.sin(a),t=1-c;
+  return new Float32Array([t*x*x+c,t*x*y+s*z,t*x*z-s*y,0, t*x*y-s*z,t*y*y+c,t*y*z+s*x,0, t*x*z+s*y,t*y*z-s*x,t*z*z+c,0, 0,0,0,1]);}
+function m3(m){return new Float32Array([m[0],m[1],m[2],m[4],m[5],m[6],m[8],m[9],m[10]])}
+function m3T(m){return [m[0]*0+m[0],m[4],m[8], m[1],m[5],m[9], m[2],m[6],m[10]]} /* транспонированная 3x3 (строки) */
+function rnd(n){return Math.random()*n} function pick(a){return a[Math.random()*a.length|0]}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a}
+
+/* =============== WebGL =============== */
+const cv=$('gl'),fx=$('fx'),fctx=fx.getContext('2d'),stage=$('stage');
+const gl=cv.getContext('webgl',{alpha:true,antialias:!MOBILE,premultipliedAlpha:false})||cv.getContext('experimental-webgl');
+if(!gl){ /* нет WebGL — честное сообщение вместо пустого экрана */
+ const ru=(navigator.language||'ru').slice(0,2)==='ru';
+ document.body.innerHTML='<div style="display:flex;height:100%;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:inherit;color:#e9e4d6">'
+  +'<div><div style="font-size:28px;font-weight:900;letter-spacing:3px;color:#e8c56a">'+(ru?'ВИНОГРАД-БУМ!':'VINE-BOOM!')+'</div>'
+  +'<p style="margin-top:14px;line-height:1.5;color:#cfe0d6">'+(ru?'Для игры нужен WebGL. Включите аппаратное ускорение в браузере или откройте страницу в другом браузере (Chrome, Safari, Яндекс Браузер).':'This game needs WebGL. Enable hardware acceleration or open the page in another browser (Chrome, Safari).')+'</p></div></div>';
+ throw new Error('WebGL unavailable');}
+const VS=`
+precision mediump float;
+attribute vec3 aPos;attribute vec3 aNrm;
+uniform mat4 uP;uniform mat4 uMV;uniform mat3 uNM;uniform vec3 uScale;uniform float uShape;
+varying vec3 vN;varying vec3 vPv;varying vec3 vPo;
+/* формы ягод: 0 — овал, 1 — сердечко (ямка сверху, носик снизу), 2 — пузатая звёздочка (5 рёбер) */
+vec3 deform(vec3 p){
+ if(uShape<.5)return p;
+ if(uShape<1.5){float t=max(p.y,0.);vec3 q=p;q.xz*=1.+.25*t;q.y-=.38*t*t*exp(-dot(p.xz,p.xz)*5.);float b=max(-p.y,0.);q.xz*=1.-.32*b*b;return q*1.05;}
+ float a=atan(p.z,p.x);float w=1.-p.y*p.y;vec3 q=p;q.xz*=(1.+.07*cos(5.*a)*w)*(1.+.12*w);return q;}
+void main(){
+ vec3 p=deform(aPos);vec3 n=aNrm;
+ if(uShape>.5){ /* нормаль деформированной поверхности — конечными разностями */
+  vec3 up=abs(aNrm.y)>.9?vec3(1.,0.,0.):vec3(0.,1.,0.);vec3 t1=normalize(cross(aNrm,up)),t2=cross(aNrm,t1);
+  vec3 d1=deform(normalize(aPos+t1*.02))-p,d2=deform(normalize(aPos+t2*.02))-p;n=normalize(cross(d1,d2));if(dot(n,aNrm)<0.)n=-n;}
+ vPo=p;vec4 pv=uMV*vec4(p*uScale,1.);vPv=pv.xyz;vN=uNM*normalize(n/uScale);gl_Position=uP*pv;}`;
+const FS=`
+precision mediump float;
+varying vec3 vN;varying vec3 vPv;varying vec3 vPo;
+uniform vec3 uCol;uniform vec3 uFlesh;uniform float uRipe;uniform float uFeat;uniform float uMode;
+uniform float uFlash;uniform float uAlpha;uniform vec4 uClip;uniform float uTime;uniform float uSeed;
+uniform vec3 uCenter;uniform mat3 uNM;uniform vec3 uScale;
+float hash(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
+void main(){
+ if(uClip.w!=0.&&dot(vPo,uClip.xyz)*uClip.w<0.)discard;
+ vec3 L=normalize(vec3(.4,.7,.65));
+ vec3 n=normalize(vN);vec3 V=normalize(-vPv);
+ if(!gl_FrontFacing){ /* внутренняя сторона половинки — мякоть */
+  n=-n;float d=max(dot(n,L),0.)*.45+.55;
+  vec3 c=uFlesh*d;float cen=length(vPo.xy);
+  c=mix(c,uCol,.35*smoothstep(.2,1.,cen));
+  gl_FragColor=vec4(c,uAlpha);return;}
+ float diff=max(dot(n,L),0.);
+ float cen=max(dot(n,V),0.);
+ float fr=pow(1.-cen,2.5);
+ vec3 base=uCol;float lum=dot(base,vec3(.3,.59,.11));
+ if(uRipe<.5){base=mix(base,vec3(lum),.35);base=mix(base,vec3(.72,.80,.55),.42)*.92;}  /* сырая: бледная, тусклая, зеленоватая */
+ else if(uRipe<1.5){base=mix(base,vec3(lum),.08)*.9;}                                 /* средняя: обычная, чуть приглушённая */
+ else base*=1.12;                                                                     /* спелая: налитая, яркая */
+ vec3 col=base*(.42+.68*diff);
+ col+=base*fr*(uRipe>1.5?.6:.25);                                                     /* просвет по краю (полупрозрачность) */
+ if(uRipe>1.5)col*=1.-.14*cen*cen;                                                    /* спелая: центр чуть глубже — ягода читается объёмной и «налитой» */
+ col+=vec3(1.,.96,.85)*pow(max(dot(reflect(-L,n),V),0.),44.)*(uRipe>1.5?.75:.35);     /* блик */
+ if(uRipe<1.5)col=mix(col,col*.85+vec3(.10),.35*cen*cen);                             /* мутная внутренность */
+ if(uRipe>1.5&&uFeat>.5){                                                             /* признак виден только у спелых */
+  vec2 rel=(vPv.xy-uCenter.xy)/uScale.x;
+  if(uFeat<1.5){ /* капельки росы: мерцающие светлые точки под кожицей */
+   vec3 p=vPo*3.2+uSeed;vec3 c=floor(p);vec3 f=fract(p);vec3 r=vec3(hash(c),hash(c+7.1),hash(c+13.7));
+   float d=length(f-(.3+.4*r));float tw=.5+.5*sin(uTime*3.+r.x*6.28);
+   float k=smoothstep(.26,.13,d)*(.35+.65*tw)*(.3+.7*cen);
+   col=mix(col,vec3(.95,1.,.98),k*.7);
+  }else if(uFeat<2.5){ /* косточки: 1–2 тёмных продолговатых пятна просвечивают */
+   for(int i=0;i<2;i++){vec3 so=(i==0)?vec3(.16,.12,.08):vec3(-.13,-.15,-.06);
+    vec3 sv=uNM*(so*uScale)/uScale.x;vec2 q=rel-sv.xy;q.x*=1.9;float d=length(q);
+    float k=smoothstep(.2,.1,d)*cen*cen*smoothstep(-.7,.1,sv.z);   /* у края ягоды косточки тают — без «обводок» на стыках */
+    col=mix(col,vec3(.22,.12,.08),k*.6);}
+  }else{ /* пузырьки: медленно поднимаются внутри */
+   for(int i=0;i<5;i++){float fi=float(i);float ph=fract(uTime*.11+fi*.2+uSeed*.1);
+    vec3 bo=vec3(sin(fi*1.7+uSeed)*.3,ph*1.3-.65,cos(fi*2.3+uSeed)*.3);
+    vec3 bv=uNM*(bo*uScale)/uScale.x;vec2 q=rel-bv.xy;float d=length(q);
+    float vis=smoothstep(0.,.12,ph)*smoothstep(1.,.86,ph)*(.4+.6*cen);
+    float ring=(smoothstep(.13,.085,d)-smoothstep(.08,.045,d)*.8)*vis;
+    col=mix(col,vec3(.9,.97,1.),ring*.9);}
+  }
+ }
+ if(uMode>.5&&uMode<1.5){float l=dot(col,vec3(.3,.59,.11));col=mix(col,vec3(l),.55)*.5;}            /* спит */
+ if(uMode>1.5&&uMode<2.5){float l=dot(col,vec3(.3,.59,.11));col=mix(vec3(l)*.3,vec3(.3,.26,.36),.35)*(.9+.1*sin(uTime*5.));} /* закрыта */
+ if(uRipe>1.5&&uMode<.5)col*=1.05+.06*sin(uTime*2.+uSeed);                                         /* лёгкое свечение спелой */
+ col=mix(col,vec3(1.,1.,.9),uFlash);
+ gl_FragColor=vec4(col,uAlpha);
+}`;
+function sh(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(s));return s;}
+let prog=null,U={},SPH=null,glLost=false;
+/* вся инициализация GL — в одной функции: вызывается при старте и после восстановления контекста (как в Мат-Бум 2) */
+function initGL(){
+ prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+ if(!gl.getProgramParameter(prog,gl.LINK_STATUS))console.error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
+ U={};['uP','uMV','uNM','uScale','uCol','uFlesh','uRipe','uFeat','uMode','uFlash','uAlpha','uClip','uTime','uSeed','uCenter','uShape'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+ /* сфера (UV), лёгкая: 20x13 на телефоне, 26x17 на десктопе */
+ const P=[],N=[],I=[],Wn=MOBILE?20:26,Hn=MOBILE?13:17;
+ for(let j=0;j<=Hn;j++){const v=j/Hn,th=v*Math.PI;for(let i=0;i<=Wn;i++){const u=i/Wn,ph=u*Math.PI*2;
+  const x=Math.sin(th)*Math.cos(ph),y=Math.cos(th),z=Math.sin(th)*Math.sin(ph);P.push(x,y,z);N.push(x,y,z);}}
+ for(let j=0;j<Hn;j++)for(let i=0;i<Wn;i++){const a=j*(Wn+1)+i,b=a+Wn+1;I.push(a,a+1,b,a+1,b+1,b);  /* CCW снаружи — иначе CULL_FACE оставляет дальнюю полусферу и глубина врёт */}
+ const buf=(d,t)=>{const b=gl.createBuffer();gl.bindBuffer(t,b);gl.bufferData(t,d,gl.STATIC_DRAW);return b;};
+ SPH={p:buf(new Float32Array(P),gl.ARRAY_BUFFER),n:buf(new Float32Array(N),gl.ARRAY_BUFFER),i:buf(new Uint16Array(I),gl.ELEMENT_ARRAY_BUFFER),cnt:I.length};
+ const aPos=gl.getAttribLocation(prog,'aPos'),aNrm=gl.getAttribLocation(prog,'aNrm');
+ gl.bindBuffer(gl.ARRAY_BUFFER,SPH.p);gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ARRAY_BUFFER,SPH.n);gl.enableVertexAttribArray(aNrm);gl.vertexAttribPointer(aNrm,3,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,SPH.i);
+ gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);
+}
+initGL();
+cv.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;});
+cv.addEventListener('webglcontextrestored',()=>{initGL();glLost=false;resize();});
+
+let W=1,H=1,DPR=1,camD=12,unitPx=60;
+let DPR_CAP=MOBILE?1.5:2;
+function resize(){if(glLost)return;DPR=Math.min(devicePixelRatio||1,DPR_CAP);
+ W=stage.clientWidth||1;H=stage.clientHeight||1;
+ cv.width=W*DPR|0;cv.height=H*DPR|0;fx.width=W*DPR|0;fx.height=H*DPR|0;fctx.setTransform(DPR,0,0,DPR,0,0);
+ gl.viewport(0,0,cv.width,cv.height);
+ /* подбор камеры: ягода ~12–15% ширины экрана, гроздь целиком в кадре */
+ const LAND=matchMedia('(orientation:landscape) and (max-height:520px)').matches;
+ const freeW=LAND?Math.max(200,W-230):W,freeH=LAND?H-40:H;   /* в ландшафте по бокам HUD и кнопки */
+ unitPx=Math.min(.15*W,.72*freeH/(CONE_H+1.6),.86*freeW/(2*CONE_R+1.3));
+ camD=(1/Math.tan(CFG.FOV/2))*H/(2*unitPx);}
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,120));
+
+/* =============== раскладка грозди (перевёрнутый конус) =============== */
+const LV=5,DY=.92,CONE_R=1.4,CONE_H=(LV-1)*DY;
+function coneLayout(n,sp){ /* подобрать радиус вершины так, чтобы ёмкость колец ≈ n; sp — шаг укладки (меньше = плотнее) */
+ sp=sp||1;
+ let best=null;
+ for(let R0=.25;R0<=2.2;R0+=.02){const caps=[];for(let k=0;k<LV;k++){const r=R0*(1-k/(LV-.25));caps.push(Math.max(1,2*Math.PI*Math.max(r,0)/sp));}
+  const sum=caps.reduce((a,b)=>a+b,0);if(!best||Math.abs(sum-n)<Math.abs(best.sum-n))best={R0,caps,sum};}
+ /* распределить n по уровням пропорционально (метод наибольших остатков) */
+ const raw=best.caps.map(c=>c*n/best.sum),cnt=raw.map(Math.floor);let rest=n-cnt.reduce((a,b)=>a+b,0);
+ raw.map((v,i)=>[v-cnt[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,rest).forEach(([,i])=>cnt[i]++);
+ const out=[];for(let k=0;k<LV;k++){const m=cnt[k];if(!m)continue;const r=m===1?0:best.R0*(1-k/(LV-.25));
+  const off=rnd(6.28)+k*.6;for(let i=0;i<m;i++){const a=off+i/m*Math.PI*2;
+   out.push({x:r*Math.cos(a)+rnd(.08)-.04,y:CONE_H/2-k*DY+rnd(.08)-.04,z:r*Math.sin(a)+rnd(.08)-.04,phi:a,ring:m>1});}}
+ return {R0:best.R0,pts:out};
+}
+
+/* =============== состояние игры =============== */
+let LVL=LEVELS[0],berries=[],halves=[],chain=[],layer=0,running=false,paused=false,locked=false;
+let angle=-20,vel=0,tiltX=6,shakeT=0,tStart=0,tPause=0,stats={cuts:0,mist:0,triples:0,total:0};
+const now=()=>performance.now();
+function activeBerries(){return berries.filter(b=>b.layer===layer&&b.alive&&b.state!=='dying')}
+
+let GEN=0;
+/* отложенные шаги правил привязаны к поколению партии: выход в меню / новая гроздь отменяет хвосты старой */
+function later(ms,fn){const g0=GEN;setTimeout(()=>{if(g0===GEN)fn();},ms);}
+function newGame(){
+ GEN++;berries=[];halves=[];chain=[];P=[];trail=[];layer=0;locked=false;if(BOT.on)BOT.toggle();angle=-20+rnd(40);vel=0;tiltX=6;stats={cuts:0,mist:0,triples:0,total:0};
+ const sleepK=[1,.42,.2]; /* спящие слои сжаты внутрь грозди; при пробуждении перестраиваются в свой конус */
+ (LVL.layers||CFG.LAYERS).forEach((n,L)=>{
+  const lay=coneLayout(n,LVL.dens);
+  /* спелость по распределению уровня */
+  const r=[];const nr=Math.round(n*LVL.dist[0]),nm=Math.round(n*LVL.dist[1]);
+  for(let i=0;i<n;i++)r.push(i<nr?0:(i<nr+nm?1:2));shuffle(r);
+  /* признаки: тройками, чтобы слой в принципе был проходим */
+  const f=[];for(let i=0;i<n;i++)f.push(LVL.feats[(i/3|0)%LVL.feats.length]);shuffle(f);
+  lay.pts.forEach((p,i)=>{
+   const tilt=p.ring?-.25:0; /* верхушка ягоды чуть к оси — ягоды «висят» */
+   const Rb=mMul(mRotY(-p.phi+Math.PI/2),mMul(mRotX(tilt+rnd(.3)-.15),mRotY(rnd(6.28))));
+   berries.push({id:berries.length,layer:L,wake:[p.x,p.y,p.z],sleep:[p.x*sleepK[L],L?p.y*(.65-L*.12)+.35+L*.2:p.y,p.z*sleepK[L]],
+    pos:[0,0,0],Rb,ripe:r[i],feat:f[i],col:pick(LVL.cols),seed:rnd(100),
+    state:'idle',closedUntil:0,flash:0,sc:1,tsc:1,alpha:1,alive:true,wk:L?0:1,twk:L?0:1,sx:0,sy:0,sr:0,sz:0});
+  });
+ });
+ berries.forEach(b=>{b.pos=b.layer?b.sleep.slice():b.wake.slice();b.tsc=CFG.SIZE[b.ripe];b.sc=b.tsc;});
+ stats.total=berries.length;tStart=now();
+ ensureSolvable(true);updateHUD();
+}
+
+/* ---------- вспомогательное для правил ---------- */
+function raiseBerry(b){if(b.ripe<2){b.ripe++;b.tsc=CFG.SIZE[b.ripe];b.flash=1;}}
+function raiseRandom(n){ /* 4 случайные ягоды слоя на одну ступень */
+ const c=shuffle(activeBerries().filter(b=>b.ripe<2)).slice(0,n);c.forEach(raiseBerry);
+ if(c.length)S.raise();return c.length;}
+function forceRaiseRawest(n){ /* 3.6: нет спелых — принудительно 4 самые сырые */
+ const c=activeBerries().filter(b=>b.ripe<2).sort((a,b)=>a.ripe-b.ripe||Math.random()-.5).slice(0,n);c.forEach(raiseBerry);return c.length;}
+function ensureSolvable(silent){ /* страховка от тупика: нужная тройка всегда достижима */
+ const L=activeBerries();if(!L.length)return;
+ let touched=false;
+ if(chain.length){const f=chain[0].feat,same=L.filter(b=>b.feat===f),need=3-chain.length;
+  if(same.length<need){chain=[];ftext(W/2,H*.3,T('ftReset'),false,true);}
+  else{let guard=0;while(same.filter(b=>b.ripe===2).length<need&&guard++<20){const c=same.filter(b=>b.ripe<2).sort((a,b)=>a.ripe-b.ripe)[0];if(!c)break;raiseBerry(c);touched=true;}}
+ }
+ if(!chain.length){
+  const ok=LVL.feats.some(f=>L.filter(b=>b.feat===f&&b.ripe===2).length>=3);
+  if(!ok){
+   let cand=LVL.feats.filter(f=>L.filter(b=>b.feat===f).length>=3)
+    .sort((a,b)=>L.filter(x=>x.feat===b&&x.ripe===2).length-L.filter(x=>x.feat===a&&x.ripe===2).length);
+   if(!cand.length){ /* ни одного признака с 3 ягодами — перераздать признаки тройками */
+    const sh=shuffle(L.slice());sh.forEach((b,i)=>b.feat=LVL.feats[(i/3|0)%LVL.feats.length]);cand=[sh[0].feat];}
+   const f=cand[0];let guard=0;
+   while(L.filter(b=>b.feat===f&&b.ripe===2).length<3&&guard++<30){const c=L.filter(b=>b.feat===f&&b.ripe<2).sort((a,b)=>b.ripe-a.ripe)[0];if(!c)break;raiseBerry(c);touched=true;}
+  }
+ }
+ if(touched&&!silent)S.raise();
+}
+
+/* ---------- разрез ---------- */
+function cutGesture(b,ang,speed,sx,sy){
+ if(b.state==='closed'){S.click();return;}
+ const wrong=b.ripe<2||(chain.length&&chain[0].feat!==b.feat);
+ if(wrong){ /* ошибка: ягода закрывается на 5 с, прогресс тройки сохраняется */
+  b.state='closed';b.closedUntil=now()+CFG.CLOSE_MS;stats.mist++;S.puf();buzz(40);TUT.ev('mistake');
+  ftext(sx,sy,T(b.ripe<2?'ftRaw':'ftOther'),false,true);spawnPuf(sx,sy);updateHUD();return;}
+ splitBerry(b,ang,speed,sx,sy);stats.cuts++;hideCue();buzz(15);TUT.ev('cut');
+ chain.push(b);S.pop(chain.length);
+ if(chain.length===3){chain=[];stats.triples++;locked=true;buzz([20,30,20]);TUT.ev('triple');
+  later(120,()=>{S.triple();ftext(sx,sy,T('ftTriple'),true);});
+  later(420,recount);}
+ updateHUD();
+}
+function splitBerry(b,ang,speed,sx,sy){
+ b.alive=false;
+ /* 6 положений: снап направления взмаха к 0°/45°/90°/135° (линия реза в пространстве вида) */
+ let a=((ang%Math.PI)+Math.PI)%Math.PI;const deg=a*180/Math.PI;
+ let snap;if(deg<30||deg>150)snap=0;else if(Math.abs(deg-90)<30)snap=90;else if(deg<90)snap=45;else snap=135;
+ const ra=snap*Math.PI/180;
+ const axisW=[Math.cos(ra),-Math.sin(ra),0];          /* линия реза (экранный y вниз → вид y вверх) */
+ const nW=[-axisW[1],axisW[0],0];                     /* нормаль плоскости реза — направление разлёта */
+ const R3=m3T(b.MV);                                  /* в локальные координаты ягоды (транспонированная 3x3) */
+ let no=[R3[0]*nW[0]+R3[1]*nW[1]+R3[2]*nW[2],R3[3]*nW[0]+R3[4]*nW[1]+R3[5]*nW[2],R3[6]*nW[0]+R3[7]*nW[1]+R3[8]*nW[2]];
+ const sc=b.scale;no=[no[0]*sc[0],no[1]*sc[1],no[2]*sc[2]];const l=Math.hypot(...no)||1;no=no.map(v=>v/l);
+ /* сила взмаха → дальность/скорость разлёта (механизм версии 02): 0 у порога, 1 при порог+2.5 px/мс */
+ const sp=clamp((speed-CFG.CUT_SPEED)/2.5,0,1);
+ const R0=new Float32Array(b.MV);R0[12]=R0[13]=R0[14]=0;
+ for(const side of [1,-1])halves.push({b,side,speed:sp,nW,axisW,no,R0,p0:[b.MV[12],b.MV[13],b.MV[14]],t0:now(),dur:480,clip:[no[0],no[1],no[2],side]});
+ spawnJuice(sx,sy,nW,b);
+}
+function recount(){ /* 3.4: тройки = floor(остаток/3), излишек сбрасывается (самые спелые) */
+ const L=activeBerries(),ex=L.length%3;
+ if(ex>0){const victims=L.sort((a,b)=>b.ripe-a.ripe||Math.random()-.5).slice(0,ex);
+  victims.forEach(v=>{v.state='dying';v.flash=1;v.dieT=0;});S.vzhuh();}
+ later(ex?520:60,afterRecount);
+}
+function afterRecount(){
+ if(activeBerries().length){
+  raiseRandom(CFG.RAISE_N);
+  let guard=0;while(!activeBerries().some(b=>b.ripe===2)&&activeBerries().length&&guard++<5){forceRaiseRawest(CFG.RAISE_N);S.raise();}
+  ensureSolvable();
+ }
+ locked=false;updateHUD();checkLayer();
+}
+function checkLayer(){
+ if(activeBerries().length)return;
+ if(layer<2){layer++;locked=true;S.layer();shake();buzz(30);TUT.ev('layer');
+  berries.filter(b=>b.layer===layer).forEach(b=>b.twk=1);          /* слой просыпается: ягоды перестраиваются */
+  ftext(W/2,H*.35,T('ftLayer',{n:layer+1}),true);
+  later(800,()=>{locked=false;ensureSolvable();updateHUD();});
+ } else win();
+}
+function win(){running=false;syncGameplay();S.fanfare();bigBurst();
+ const t=Math.round((now()-tStart)/1000);recordWin(LVL.n,{time:t,cuts:stats.cuts,mist:stats.mist,auto:stats.auto||undefined});
+ $('w-next').hidden=(LVL.n>=LEVELS.length);
+ const rec={time:t,mist:stats.mist};
+ $('win-info').innerHTML=T('winInfo',{name:lvName(LVL),t:Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),c:stats.cuts,tr:stats.triples,m:stats.mist})
+  +'<br>'+(stats.auto?'<span style="color:var(--hint)">'+T('hallAuto')+'</span>':T('winPts',{p:lvScore(rec),rec:PROG.done[LVL.n]&&PROG.done[LVL.n].time===t&&PROG.done[LVL.n].mist===stats.mist?' · '+T('winRec'):''}));
+ later(900,()=>$('ov-win').classList.add('on'));}
+const REDUCED=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}})();
+function shake(){if(REDUCED)return;const s=$('shaker');s.style.display='contents';shakeT=.45;}
+
+/* =============== обучение (6 шагов, как в Грави-Буме) =============== */
+const TUT={on:false,step:0,a0:0,t0:0,
+ steps:{length:6},
+ start(){this.on=true;this.step=0;this.a0=angle;this.t0=tiltX;this.show();},
+ stop(){this.on=false;tutDone=true;$('trainPlate').classList.remove('on');try{localStorage.setItem('vb_tut','1');}catch(e){}},
+ show(){if(!this.on)return;$('trainPlate').classList.add('on');$('trStep').textContent=T('tutStep',{a:this.step+1,b:6});
+  $('trText').innerHTML=T('tut')[this.step];},
+ next(){this.step++;if(this.step>=6){this.stop();return;}this.show();S.sel&&S.sel();
+  if(this.step===5)setTimeout(()=>{if(this.on&&this.step===5)this.stop();},9000);},
+ tick(){if(!this.on)return;
+  if(this.step===0&&Math.abs(angle-this.a0)>40)this.next();
+  else if(this.step===1&&Math.abs(tiltX-this.t0)>8)this.next();},
+ ev(e){if(!this.on)return;
+  if(this.step===2&&e==='cut')this.next();
+  else if(this.step===3&&e==='triple')this.next();
+  else if(this.step===4&&e==='layer')this.next();
+  else if(this.step===5&&e==='triple')this.stop();},
+ /* подсветка подходящих спелых ягод на шагах 3–4 */
+ hilite(){return this.on&&(this.step===2||this.step===3);}
+};
+S.sel=()=>{tone(1250,.07,'sine',.12);tone(1900,.05,'sine',.07,0,.02)};
+$('trSkip').onclick=()=>{S.click();TUT.stop();};
+
+/* =============== HUD =============== */
+function updateHUD(){
+ const L=activeBerries().length;
+ $('stLayer').textContent=(layer+1)+'/3';$('stBerries').textContent=L;
+ const slots=$('chainSlots').children;
+ for(let i=0;i<3;i++){const b=chain[i];slots[i].className='slot'+(b?' full':'');slots[i].innerHTML=b?FEATS[b.feat].svg:'';}
+ const done=berries.filter(b=>!b.alive||b.state==='dying').length;$('pbarI').style.width=(done/stats.total*100)+'%';
+ let h;
+ if(chain.length)h=T('hintChain',{n:chain.length,who:T('who')[chain[0].feat]});
+ else h=T('hintFind',{fs:LVL.feats.map(f=>T('feat')[f]).join(' / ')});
+ $('hint2').textContent=h;
+}
+function ftext(x,y,txt,big,bad){const d=document.createElement('div');d.className='ftext'+(big?' big':'')+(bad?' bad':'');d.textContent=txt;
+ const r=stage.getBoundingClientRect();d.style.left=(r.left+x)+'px';d.style.top=(r.top+y)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),1000);}
+
+/* =============== частицы и след ножа (2D-канвас) =============== */
+let P=[],trail=[];
+function spawnJuice(x,y,nV,b){
+ const c=LVL.juice;
+ for(let i=0;i<16;i++){const s=i&1?1:-1,sp=2+rnd(4);const ang=Math.atan2(-nV[1]*s,nV[0]*s)+rnd(1.2)-.6;
+  P.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,t:0,life:.45+rnd(.3),r:2+rnd(3),col:c,type:'dot'});}
+ if(b.feat===0)for(let i=0;i<8;i++){const a=rnd(6.28),sp=1+rnd(3);P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,t:0,life:.5,r:1.5+rnd(1.5),col:'230,245,255',type:'dot'});}
+ if(b.feat===1)for(let i=0;i<2;i++)P.push({x:x+rnd(10)-5,y,vx:rnd(2)-1,vy:-1.5,t:0,life:.8,r:4,col:'55,30,18',type:'seed',rot:rnd(6.28)});
+ if(b.feat===2)for(let i=0;i<6;i++)P.push({x:x+rnd(30)-15,y:y+rnd(30)-15,vx:0,vy:-.5,t:0,life:.4+rnd(.3),r:3+rnd(4),col:'220,245,255',type:'bub'});
+}
+function spawnPuf(x,y){for(let i=0;i<10;i++){const a=rnd(6.28),sp=.5+rnd(1.5);P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,t:0,life:.5,r:3+rnd(4),col:'90,80,100',type:'bub'});}}
+function bigBurst(){for(let i=0;i<(REDUCED?40:120);i++){const a=rnd(6.28),sp=2+rnd(7);P.push({x:W/2,y:H/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,t:0,life:.8+rnd(.8),r:2+rnd(4),col:LVL.juice,type:'dot'});}}
+function drawFX(dt){
+ fctx.clearRect(0,0,W,H);
+ /* след ножа — светящаяся линия, гаснет за ~0.15 с */
+ const tn=now();trail=trail.filter(p=>tn-p.t<160);
+ if(trail.length>1){fctx.lineCap='round';fctx.lineJoin='round';
+  for(let i=1;i<trail.length;i++){const a=1-(tn-trail[i].t)/160;fctx.strokeStyle=THEME==="light"?`rgba(70,50,10,${a*.8})`:`rgba(255,255,230,${a*.9})`;fctx.lineWidth=2+a*5;
+   fctx.beginPath();fctx.moveTo(trail[i-1].x,trail[i-1].y);fctx.lineTo(trail[i].x,trail[i].y);fctx.stroke();}}
+ /* обучение: пульсирующие золотые кольца у подходящих спелых ягод */
+ if(TUT.hilite()){const f=chain.length?chain[0].feat:null;const pul=.6+.4*Math.sin(tn/180);
+  for(const b of berries){if(!b.alive||b.layer!==layer||b.ripe!==2||b.state!=='idle'||(f!==null&&b.feat!==f))continue;
+   fctx.strokeStyle=`rgba(232,197,106,${pul})`;fctx.lineWidth=3;fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+4+2*pul,0,6.28);fctx.stroke();}}
+ /* кольцо-таймер у закрытых ягод */
+ for(const b of berries){if(b.state!=='closed'||!b.alive||b.layer!==layer)continue;const k=Math.max(0,(b.closedUntil-tn)/CFG.CLOSE_MS);
+  fctx.strokeStyle='rgba(255,122,122,.75)';fctx.lineWidth=3;fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+3,-Math.PI/2,-Math.PI/2+Math.PI*2*k);fctx.stroke();}
+ if(P.length>260)P=P.slice(P.length-260);
+ P=P.filter(p=>{p.t+=dt;if(p.t>=p.life)return false;const k=1-p.t/p.life;
+  p.x+=p.vx*60*dt;p.y+=p.vy*60*dt;
+  if(p.type==='dot'){p.vy+=14*dt;fctx.fillStyle=`rgba(${p.col},${k})`;fctx.beginPath();fctx.arc(p.x,p.y,p.r*k,0,6.28);fctx.fill();}
+  else if(p.type==='seed'){p.vy+=16*dt;p.rot+=dt*6;fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.rot);fctx.fillStyle=`rgba(${p.col},${k})`;fctx.beginPath();fctx.ellipse(0,0,p.r*.6,p.r,0,0,6.28);fctx.fill();fctx.restore();}
+  else{fctx.strokeStyle=`rgba(${p.col},${k})`;fctx.lineWidth=1.5;fctx.beginPath();fctx.arc(p.x,p.y,p.r*(1+p.t*2),0,6.28);fctx.stroke();}
+  return true;});
+}
+
+/* =============== ввод: вращение vs разрез =============== */
+let g=null;
+function stagePt(e){const r=stage.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top,t:now()};}
+cv.addEventListener('pointerdown',e=>{if(!running||paused)return;try{cv.setPointerCapture(e.pointerId);}catch(err){}
+ if(BOT.on)BOT.toggle();const p=stagePt(e);g={id:e.pointerId,x0:p.x,y0:p.y,t0:p.t,last:p,pts:[p],mode:null,done:false,cands:new Map(),maxSp:0,peak:0,sp0:0};vel=0;stage.classList.add('grabbing');e.preventDefault();});
+/* скорость за последние ~70 мс (версия 02) */
+function recentSpeed(){const pts=g.pts,last=pts[pts.length-1];if(pts.length<2)return 0;let k=pts.length-2; /* минимум один отрезок — иначе при редких событиях скорость «0» */
+ while(k>0&&last.t-pts[k-1].t<70)k--;const a=pts[k];return Math.hypot(last.x-a.x,last.y-a.y)/Math.max(1,last.t-a.t);}
+addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;const p=stagePt(e);
+ const dx=p.x-g.last.x,dy=p.y-g.last.y;g.pts.push(p);if(g.pts.length>40)g.pts.shift();
+ const spNow=Math.hypot(dx,dy)/Math.max(1,p.t-g.last.t);if(spNow>g.peak)g.peak=spNow;
+ if(!g.mode){ /* решение с гистерезисом: ≥20 px и быстрее порога — рез; ≥14 px и медленнее 0.8·порога — вращение; между — ждём */
+  const D=Math.hypot(p.x-g.x0,p.y-g.y0),sp=recentSpeed();
+  if(D>=CFG.CUT_MIN&&sp>=CFG.CUT_SPEED){g.mode='cut';g.sp0=sp;g.maxSp=sp;trail.length=0;trail.push({x:g.x0,y:g.y0,t:g.t0},p);
+   slashSample(g.x0,g.y0,p.x,p.y);maybeCommit(p.x,p.y);}
+  else if(D>=14&&sp<CFG.CUT_SPEED*.8){g.mode='rot';g.sp0=sp;}}
+ else if(g.mode==='rot'){angle+=dx*CFG.ROT_K;vel=dx*CFG.ROT_K;tiltX=Math.max(-CFG.TILT_MAX,Math.min(CFG.TILT_MAX,tiltX+dy*CFG.TILT_K));}
+ else if(g.mode==='cut'){trail.push(p);g.maxSp=Math.max(g.maxSp,recentSpeed());
+  if(!g.done){slashSample(g.last.x,g.last.y,p.x,p.y);maybeCommit(p.x,p.y);}}
+ g.last=p;});
+/* рез (версия 02): по пути взмаха собираем ягоды, через которые он прошёл; побеждает та, чей центр ближе к линии
+   (расстояние нормировано на радиус) — в плотной грозди случайно задетые соседи не засчитываются */
+function pickAt(x,y){let best=null;for(const o of berries){if(!o.alive||o.layer!==layer||o.state==='dying'||o.sr<=0)continue;
+ const d=Math.hypot(x-o.sx,y-o.sy);if(d<=o.sr*.98&&(!best||o.sz>best.sz))best=o;}return best;}
+function slashSample(x1,y1,x2,y2){const len=Math.hypot(x2-x1,y2-y1),n=Math.max(1,Math.ceil(len/4));
+ for(let i=0;i<=n;i++){const x=x1+(x2-x1)*i/n,y=y1+(y2-y1)*i/n,b=pickAt(x,y);if(!b)continue;
+  const d=Math.hypot(x-b.sx,y-b.sy)/Math.max(1,b.sr);const c=g.cands.get(b);if(!c)g.cands.set(b,{d,order:g.cands.size});else if(d<c.d)c.d=d;}}
+function bestCand(){let best=null,bd=1e9,bo=1e9;g.cands.forEach((c,b)=>{if(c.d<bd-1e-6||(Math.abs(c.d-bd)<=1e-6&&c.order<bo)){bd=c.d;bo=c.order;best=b;}});return best?{b:best,d:bd}:null;}
+function commitSlash(x,y){if(g.done)return;g.done=true;const c=bestCand();
+ if(!c){S.whoosh();return;}
+ if(locked)return;
+ let ang=Math.atan2(y-g.y0,x-g.x0);if(Math.hypot(x-g.x0,y-g.y0)<CFG.CUT_MIN)ang=0;
+ cutGesture(c.b,ang,g.maxSp,c.b.sx,c.b.sy);}
+/* ранний коммит: палец вышел из контура лучшей ягоды, через центр которой прошёл (d<0.45) */
+function maybeCommit(x,y){const c=bestCand();if(!c||c.d>=.45)return;if(Math.hypot(x-c.b.sx,y-c.b.sy)>c.b.sr*1.25)commitSlash(x,y);}
+function endG(e){if(!g||e.pointerId!==g.id)return;
+ if(g.mode==='cut'&&!g.done)commitSlash(g.last.x,g.last.y);
+ if(g.mode){GLOG.push({m:g.mode,sp0:g.sp0,pk:g.peak,hit:g.done&&g.cands.size>0});if(GLOG.length>14)GLOG.shift();}
+ if(g.mode==='rot'&&now()-g.last.t>120)vel=0; /* палец замер — не бросаем */
+ g=null;stage.classList.remove('grabbing');}
+addEventListener('pointerup',endG);addEventListener('pointercancel',endG);
+/* попадание отрезка в спроецированные круги ягод активного слоя; берём ближайшую к камере */
+function hitTest(a,b){const hits=[];
+ for(const o of berries){if(!o.alive||o.layer!==layer||o.state==='dying'||o.sr<=0)continue;
+  const t=segEnter(a.x,a.y,b.x,b.y,o.sx,o.sy,o.sr*.98);if(t>=0)hits.push({o,t});}
+ if(!hits.length)return null;
+ /* первая ягода, в которую вошёл нож; при почти одновременном касании — ближняя к камере */
+ hits.sort((p,q)=>p.t-q.t);const t0=hits[0].t;let best=hits[0].o;
+ for(const h of hits){if(h.t-t0>.15)break;if(h.o.sz>best.sz)best=h.o;}
+ return best;}
+/* параметр t∈[0,1] входа отрезка в круг, -1 если не задевает; старт внутри круга → 0 */
+function segEnter(x1,y1,x2,y2,px,py,r){const dx=x2-x1,dy=y2-y1,fx=x1-px,fy=y1-py;const c=fx*fx+fy*fy-r*r;if(c<=0)return 0;
+ const a=dx*dx+dy*dy||1e-6,b=2*(fx*dx+fy*dy),D=b*b-4*a*c;if(D<0)return -1;const t=(-b-Math.sqrt(D))/(2*a);return (t>=0&&t<=1)?t:-1;}
+/* кнопки подкрутки, как в Мат-Бум */
+$('bL').onclick=()=>{S.click();vel=-6;};$('bR').onclick=()=>{S.click();vel=6;};
+addEventListener('keydown',e=>{
+ if(e.key==='Enter'||e.key===' '){ /* Enter в окнах: продолжить / дальше */
+  if($('ov-win').classList.contains('on')){e.preventDefault();($('w-next').hidden?$('w-again'):$('w-next')).click();return;}
+  if($('ov-pause').classList.contains('on')&&e.key==='Enter'){$('p-resume').click();return;}}
+ if(!running||paused)return;
+ if(e.key==='ArrowLeft')vel=-6;if(e.key==='ArrowRight')vel=6;
+ if(e.key==='ArrowUp')tiltX=Math.max(-CFG.TILT_MAX,tiltX-4);if(e.key==='ArrowDown')tiltX=Math.min(CFG.TILT_MAX,tiltX+4);
+ if(e.key==='Escape')togglePause();});
+
+/* =============== панель настройки: живая правка CFG, сохраняется в localStorage vb_tune =============== */
+/* тема: localStorage vb_theme, по умолчанию тёмная (как в концепции) */
+let THEME='dark';try{THEME=localStorage.getItem('vb_theme')||'dark';}catch(e){}
+function applyTheme(){document.documentElement.setAttribute('data-theme',THEME);$('btn-theme').textContent=THEME==='light'?'☾':'☀';
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEME==='light'?'#f3f0e4':'#0b1410';}
+$('btn-theme').onclick=()=>{S.click();THEME=THEME==='light'?'dark':'light';try{localStorage.setItem('vb_theme',THEME);}catch(e){}applyTheme();};
+applyTheme();
+const GLOG=[]; /* последние жесты: режим, скорость в момент решения, пик — для подбора порога */
+const TUNE={keys:[['cut','CUT_SPEED',2],['min','CUT_MIN',0],['size','SIZE_MUL',2],['rot','ROT_K',2],['damp','DAMP',2]],def:{},
+ init(){this.keys.forEach(([id,k])=>this.def[k]=CFG[k]);
+  try{const sv=JSON.parse(localStorage.getItem('vb_tune')||'{}');this.keys.forEach(([id,k])=>{if(typeof sv[k]==='number')CFG[k]=sv[k];});}catch(e){}
+  this.keys.forEach(([id,k,d])=>{const r=$('r-'+id);r.value=CFG[k];r.oninput=()=>{CFG[k]=+r.value;this.sync();this.save();};});this.sync();},
+ sync(){this.keys.forEach(([id,k,d])=>{$('r-'+id).value=CFG[k];$('v-'+id).textContent=(+CFG[k]).toFixed(d);});syncCutSelect();
+  $('tuneLine').textContent=this.keys.map(([id,k,d])=>k+'='+(+CFG[k]).toFixed(d)).join('  ')+'  fps='+fpsShown+' dpr='+DPR.toFixed(2)+' '+W+'x'+H;
+  const rot=GLOG.filter(x=>x.m==='rot').map(x=>x.sp0.toFixed(2)),cut=GLOG.filter(x=>x.m==='cut').map(x=>x.sp0.toFixed(2)+(x.hit?'':'·'));
+  let sug='';{const r=GLOG.filter(x=>x.m==='rot').map(x=>x.pk),c=GLOG.filter(x=>x.m==='cut').map(x=>x.sp0);
+   if(r.length>=3&&c.length>=3){const a=Math.max(...r),b=Math.min(...c);sug='\n'+T('gSug')+' '+((a+b)/2).toFixed(2)+(a>=b?' ⚠':'');}}
+  $('gestLine').textContent=T('gRot')+' '+(rot.join(' ')||'—')+'\n'+T('gCut')+' '+(cut.join(' ')||'—')+sug;},
+ save(){try{const o={};this.keys.forEach(([id,k])=>o[k]=CFG[k]);localStorage.setItem('vb_tune',JSON.stringify(o));}catch(e){}},
+ reset(){this.keys.forEach(([id,k])=>CFG[k]=this.def[k]);this.sync();try{localStorage.removeItem('vb_tune');}catch(e){}}};
+/* выбор порога в меню: синхронизирован с ползунком ⚙ Настройки и сохраняется вместе с ним (vb_tune) */
+function syncCutSelect(){const sel=$('sel-cut');const v=CFG.CUT_SPEED;let best=null;for(const o of sel.options){if(Math.abs(parseFloat(o.value)-v)<.03)best=o;}
+ if(best)sel.value=best.value;else{sel.selectedIndex=-1;}}
+$('sel-cut').onchange=e=>{S.click();CFG.CUT_SPEED=parseFloat(e.target.value)||.35;TUNE.sync();TUNE.save();};
+$('p-tune').onclick=()=>{S.click();TUNE.sync();$('ov-pause').classList.remove('on');$('ov-tune').classList.add('on');};
+$('t-back').onclick=()=>{S.click();$('ov-tune').classList.remove('on');$('ov-pause').classList.add('on');};
+$('t-reset').onclick=()=>{S.click();TUNE.reset();};
+$('t-copy').onclick=()=>{S.click();const t=$('tuneLine').textContent+'\n'+$('gestLine').textContent;if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});
+ const b=$('t-copy');b.textContent='✓';setTimeout(()=>b.textContent=T('tCopy'),900);};
+
+/* =============== авто-бот: сам находит нужную ягоду, доворачивает гроздь и «режет» синтетическим свайпом =============== */
+const BOT={on:false,t:0,target:null,phase:'idle',swipe:null,
+ toggle(){this.on=!this.on;this.t=0;this.phase='idle';this.target=null;$('bAuto').classList.toggle('on',this.on);if(this.on){hideCue();stats.auto=true;}},
+ pickTarget(){const tn=now();const L=activeBerries().filter(b=>b.state==='idle'&&!(b.botSkip>tn));const f=chain.length?chain[0].feat:null;
+  let c=L.filter(b=>b.ripe===2&&(f===null||b.feat===f));
+  if(f===null){const cnt={};c.forEach(b=>cnt[b.feat]=(cnt[b.feat]||0)+1);c=c.filter(b=>cnt[b.feat]>=3);}
+  if(!c.length)return null;
+  /* ягода, которая ближе всего к «лицу» грозди — меньше доворачивать */
+  const ar=angle*Math.PI/180;c.sort((p,q)=>(-q.pos[0]*Math.sin(ar)+q.pos[2]*Math.cos(ar))-(-p.pos[0]*Math.sin(ar)+p.pos[2]*Math.cos(ar)));
+  return c[0];},
+ tick(dt){if(!this.on||!running||paused||locked||g)return;this.t+=dt;
+  if(this.phase==='idle'){if(this.t<.6)return;this.target=this.pickTarget();if(!this.target){this.t=0;return;}
+   /* угол, при котором ягода смотрит в камеру */
+   const b=this.target;this.goal=Math.atan2(-b.pos[0],b.pos[2])*180/Math.PI;this.phase='turn';this.t=0;return;}
+  if(this.phase==='turn'){let d=((this.goal-angle+540)%360)-180;angle+=d*Math.min(1,dt*4);vel=0;tiltX+=(8-tiltX)*dt*3;
+   if(Math.abs(d)<2||this.t>1.5){const b=this.target;
+    /* ягода перекрыта другой — не режем вслепую, выбираем другую */
+    if(hitTest({x:b.sx-1,y:b.sy},{x:b.sx+1,y:b.sy})!==b){b.botSkip=now()+4000;this.phase='idle';this.t=.4;return;}
+    this.phase='swipe';this.t=0;const a=rnd(Math.PI);
+    this.swipe={x:b.sx-Math.cos(a)*b.sr*.85,y:b.sy-Math.sin(a)*b.sr*.85,dx:Math.cos(a)*b.sr*1.7,dy:Math.sin(a)*b.sr*1.7,k:0,done:false};}
+   return;}
+  if(this.phase==='swipe'){const sw=this.swipe;const k0=sw.k;sw.k=Math.min(1,sw.k+dt*7);
+   const p0={x:sw.x+sw.dx*k0,y:sw.y+sw.dy*k0},p1={x:sw.x+sw.dx*sw.k,y:sw.y+sw.dy*sw.k,t:now()};trail.push(p1);
+   if(!sw.done){const hit=hitTest(p0,p1);if(hit){sw.done=true;cutGesture(hit,Math.atan2(sw.dy,sw.dx),2.5,hit.sx,hit.sy);}}
+   if(sw.k>=1){if(!sw.done)S.whoosh();this.phase='idle';this.t=0;}}
+ }};
+$('bAuto').onclick=()=>{S.click();BOT.toggle();};
+
+/* =============== кадр =============== */
+let lastT=0;
+function frame(t){requestAnimationFrame(frame);
+ const dt=Math.min(.05,(t-lastT)/1000||.016);lastT=t;
+ if(!running||paused||glLost)return;
+ if(!g||g.mode!=='rot'){angle+=vel;vel*=CFG.DAMP;if(Math.abs(vel)<.01)vel=0;}
+ const tn=now(),ts=t/1000;
+ /* анимации состояний */
+ for(const b of berries){
+  if(b.state==='closed'&&tn>=b.closedUntil)b.state='idle';
+  b.flash=Math.max(0,b.flash-dt*2.2);
+  b.sc+=(b.tsc-b.sc)*Math.min(1,dt*6);
+  if(b.twk>b.wk){b.wk=Math.min(1,b.wk+dt*1.6);const k=1-Math.pow(1-b.wk,3);for(let i=0;i<3;i++)b.pos[i]=b.sleep[i]+(b.wake[i]-b.sleep[i])*k;}
+  if(b.state==='dying'){b.dieT+=dt;b.alpha=Math.max(0,1-b.dieT/.5);b.sc*=1-dt*2.5;if(b.dieT>=.5){b.alive=false;b.state='gone';}}
+ }
+ /* матрицы */
+ const asp=W/H,Pm=mPersp(CFG.FOV,asp,1,100);
+ let shx=0,shy=0;if(shakeT>0){shakeT-=dt;shx=(rnd(2)-1)*.08*shakeT*2;shy=(rnd(2)-1)*.08*shakeT*2;}
+ const view=mTrans(shx,shy,-camD);
+ const VM=mMul(view,mMul(mRotX(tiltX*Math.PI/180),mRotY(angle*Math.PI/180)));
+ const f=1/Math.tan(CFG.FOV/2);
+ gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ gl.uniformMatrix4fv(U.uP,false,Pm);gl.uniform1f(U.uTime,ts);gl.uniform3fv(U.uFlesh,LVL.flesh);gl.uniform1f(U.uShape,LVL.shape||0);
+ const opaque=[],trans=[];
+ for(const b of berries){if(!b.alive&&b.state!=='dying')continue;
+  const MV=mMul(VM,mMul(mTrans(b.pos[0],b.pos[1],b.pos[2]),b.Rb));b.MV=MV;
+  const s=.5*(LVL.size||1)*CFG.SIZE_MUL*b.sc*(b.layer===layer?1:.6+.4*b.wk);b.scale=[s,s*LVL.elong,s];
+  const cx=MV[12],cy=MV[13],cz=MV[14];b.cz=cz;
+  /* экранная проекция для попадания (CSS px) */
+  const iz=1/(-cz);b.sx=(cx*f/asp*iz*.5+.5)*W;b.sy=(1-(cy*f*iz*.5+.5))*H;b.sr=s*f*iz*H*.5*(1+(LVL.elong-1)*.4);b.sz=cz;
+  (b.alpha<1?trans:opaque).push(b);}
+ gl.enable(gl.CULL_FACE);gl.depthMask(true);
+ const drawB=b=>{gl.uniformMatrix4fv(U.uMV,false,b.MV);gl.uniformMatrix3fv(U.uNM,false,m3(b.MV));gl.uniform3fv(U.uScale,b.scale);
+  gl.uniform3fv(U.uCol,b.col);gl.uniform1f(U.uRipe,b.ripe);gl.uniform1f(U.uFeat,b.layer===layer?b.feat+1:0);
+  gl.uniform1f(U.uMode,b.layer!==layer&&b.wk<.5?1:(b.state==='closed'?2:0));gl.uniform1f(U.uFlash,b.flash);
+  gl.uniform1f(U.uAlpha,b.alpha);gl.uniform4f(U.uClip,0,0,0,0);gl.uniform1f(U.uSeed,b.seed);gl.uniform3f(U.uCenter,b.MV[12],b.MV[13],b.MV[14]);
+  gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);};
+ opaque.forEach(drawB);
+ /* плодоножки: тонкая ножка от каждой ягоды активного слоя к оси грозди (+1 крошечный draw на ягоду) */
+ {gl.uniform1f(U.uShape,0);gl.uniform3f(U.uCol,.42,.47,.22);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);gl.uniform1f(U.uAlpha,1);gl.uniform4f(U.uClip,0,0,0,0);
+  for(const b of berries){if(b.layer!==layer||!b.alive||b.state==='dying'||b.wk<1)continue;
+   const px=b.pos[0],py=b.pos[1],pz=b.pos[2];const tx=0,ty=py+.5,tz=0;
+   const dx=tx-px,dy=ty-py,dz=tz-pz;const len=Math.hypot(dx,dy,dz);if(len<.2)continue;
+   const nx=dx/len,ny=dy/len,nz=dz/len;const ax=[nz,0,-nx];const al=Math.hypot(ax[0],ax[2])||1;ax[0]/=al;ax[2]/=al;
+   const ang=Math.acos(Math.max(-1,Math.min(1,ny)));
+   const MV=mMul(VM,mMul(mTrans((px+tx)/2,(py+ty)/2,(pz+tz)/2),mRotAxis(ax,ang)));
+   gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,.03,len*.5,.03);gl.uniform3f(U.uCenter,MV[12],MV[13],MV[14]);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);}
+  gl.uniform1f(U.uShape,LVL.shape||0);}
+ /* ножка */
+ {gl.uniform1f(U.uShape,0);const MV=mMul(VM,mTrans(0,CONE_H/2+.75,0));gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,.09,.5,.09);
+  gl.uniform3f(U.uCol,.45,.34,.2);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);gl.uniform1f(U.uAlpha,1);gl.uniform4f(U.uClip,0,0,0,0);
+  gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);gl.uniform1f(U.uShape,LVL.shape||0);}
+ /* полупрозрачные: растворяющиеся ягоды */
+ gl.depthMask(false);trans.sort((a,b)=>a.cz-b.cz).forEach(drawB);
+ /* половинки — поверх грозди (свой буфер глубины), с лёгким вылетом на зрителя: механизм версии 02 */
+ if(halves.length){gl.clear(gl.DEPTH_BUFFER_BIT);gl.depthMask(true);gl.disable(gl.CULL_FACE);
+  const tnow=now();
+  halves=halves.filter(h=>{const p=(tnow-h.t0)/h.dur;if(p>=1)return false;
+   const b=h.b,dist=(0.35+0.9*h.speed)*easeOut(p);
+   const off=[h.nW[0]*h.side*dist,h.nW[1]*h.side*dist-0.9*p*p,h.nW[2]*h.side*dist+0.8*easeOut(p)];
+   const Rt=mMul(mRotAxis(h.axisW,-h.side*(1.1+1.4*h.speed)*p),h.R0);
+   const k=1-.7*smooth(.3,1,p),alpha=1-smooth(.5,1,p);
+   const MV=mMul(mTrans(h.p0[0]+off[0],h.p0[1]+off[1],h.p0[2]+off[2]),Rt);
+   const sx=b.scale[0]*k,sy=b.scale[1]*k,sz=b.scale[2]*k;
+   /* оболочка половинки (отсечение плоскостью) */
+   gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,sx,sy,sz);
+   gl.uniform3fv(U.uCol,b.col);gl.uniform1f(U.uRipe,2);gl.uniform1f(U.uFeat,b.feat+1);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);
+   gl.uniform1f(U.uAlpha,alpha);gl.uniform4fv(U.uClip,h.clip);gl.uniform1f(U.uSeed,b.seed);gl.uniform3f(U.uCenter,MV[12],MV[13],MV[14]);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);
+   /* диск-срез (мякоть) в плоскости реза: сплющенная сфера, повёрнутая z→нормаль, чуть сдвинутая в сторону своей половинки */
+   const n=h.no,ref=Math.abs(n[2])<.9?[0,0,1]:[1,0,0];
+   let u=[n[1]*ref[2]-n[2]*ref[1],n[2]*ref[0]-n[0]*ref[2],n[0]*ref[1]-n[1]*ref[0]];let ul=Math.hypot(...u)||1;u=u.map(v=>v/ul);
+   const v=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]];
+   const Rd=new Float32Array([u[0],u[1],u[2],0, v[0],v[1],v[2],0, n[0],n[1],n[2],0, 0,0,0,1]);
+   const Md=mMul(MV,mMul(mScale(sx,sy,sz),mMul(mTrans(n[0]*h.side*.012,n[1]*h.side*.012,n[2]*h.side*.012),mMul(Rd,mScale(.985,.985,.02)))));
+   gl.uniformMatrix4fv(U.uMV,false,Md);gl.uniformMatrix3fv(U.uNM,false,m3(Md));gl.uniform3f(U.uScale,1,1,1);gl.uniform1f(U.uShape,0);
+   gl.uniform3fv(U.uCol,LVL.flesh);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform4f(U.uClip,0,0,0,0);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);gl.uniform1f(U.uShape,LVL.shape||0);
+   return true;});}
+ gl.depthMask(true);
+ BOT.tick(dt);drawFX(dt);dbgTick(dt);TUT.tick();
+ const sec=Math.floor((now()-tStart)/1000);$('stTime').textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+}
+requestAnimationFrame(frame);
+
+/* =============== экраны и кнопки =============== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));$('btn-back').hidden=(id==='scr-start');
+ if(id==='scr-game'){requestAnimationFrame(()=>{resize();});}}
+let cueShown=false;try{cueShown=localStorage.getItem('vb_cue')==='1';}catch(e){}
+let curLvl=0,tutDone=false;try{tutDone=localStorage.getItem('vb_tut')==='1';}catch(e){}
+function startGame(idx,train){if(typeof idx==='number')curLvl=idx;LVL=LEVELS[curLvl];show('scr-game');resize();newGame();running=true;paused=false;$('ov-win').classList.remove('on');
+ gpWanted=true;syncGameplay();
+ const tut=train||(!tutDone&&!Object.keys(PROG.done).length&&curLvl===0);   /* первый запуск — обучение автоматически */
+ if(tut){TUT.start();$('cue').classList.remove('on');}else{TUT.stop();TUT.on=false;$('cue').classList.toggle('on',!cueShown);}}
+function hideCue(){if($('cue').classList.contains('on')){$('cue').classList.remove('on');cueShown=true;try{localStorage.setItem('vb_cue','1');}catch(e){}}}
+function togglePause(force){if(!running)return;paused=force===true?true:!paused;$('ov-pause').classList.toggle('on',paused);
+ if(master)master.gain.value=paused?0:(sndOn?.5:0); /* на паузе (в т.ч. game_api_pause и сворачивание) звук глушится — требование Яндекс Игр */
+ if(paused)tPause=now();else{const d=now()-tPause;tStart+=d;for(const b of berries)if(b.state==='closed')b.closedUntil+=d;}syncGameplay();}
+$('b-play').onclick=()=>{S.click();startGame(nextLevelIdx());};
+$('b-train').onclick=()=>{S.click();startGame(0,true);};
+$('b-help').onclick=()=>{S.click();show('scr-help');};$('btn-help').onclick=()=>{S.click();if(running&&!paused)togglePause();$('ov-pause').classList.remove('on');show('scr-help');};
+function openHall(){const L=$('hallList');L.innerHTML='';let n=0;
+ LEVELS.forEach((l,i)=>{const r=PROG.done[l.n];if(!r)return;n++;const d=document.createElement('div');d.className='hallrow';
+  const mm=Math.floor(r.time/60)+':'+String(r.time%60).padStart(2,'0');
+  d.innerHTML='<span class="rk">'+l.n+'</span><span class="nm">'+lvName(l)+(r.auto?' <span class="ex">'+T('hallAuto')+'</span>':'')+'</span><span class="ex">'+mm+' · ✂'+r.cuts+' · ✗'+r.mist+'</span><span class="sc">'+(r.auto?'—':T('hallPts',{n:lvScore(r)}))+'</span>';L.appendChild(d);});
+ if(!n){const d=document.createElement('div');d.className='hallrow empty';d.textContent=T('hallEmpty');L.appendChild(d);}
+ $('hallTotal').textContent=T('hallTotal',{n:totalScore(),a:n,b:LEVELS.length});
+ const ya=$('hallYa');ya.innerHTML='';show('scr-hall');
+ lbTop(5).then(list=>{if(!list||!list.length)return;ya.innerHTML='<h3>'+T('hallOnline')+'</h3>';
+  list.forEach((e,i)=>{const d=document.createElement('div');d.className='hallrow';d.style.gridTemplateColumns='28px 1fr auto';
+   d.innerHTML='<span class="rk">'+(i+1)+'</span><span class="nm">'+String(e.name).replace(/[<>&]/g,'')+'</span><span class="sc">'+e.score+'</span>';ya.appendChild(d);});});}
+$('b-hall').onclick=()=>{S.click();openHall();};
+$('hall-back').onclick=()=>{S.click();show('scr-start');};
+$('help-back').onclick=()=>{S.click();show(running?'scr-game':'scr-start');if(running&&paused)$('ov-pause').classList.add('on');};
+$('btn-back').onclick=()=>{S.click();running=false;paused=false;syncGameplay();if(TUT.on)TUT.stop();$('ov-pause').classList.remove('on');show('scr-start');};
+$('bPause').onclick=()=>{S.click();togglePause();};$('p-resume').onclick=()=>{togglePause();S.click();};
+$('p-exit').onclick=()=>{S.click();running=false;paused=false;syncGameplay();if(TUT.on)TUT.stop();$('ov-pause').classList.remove('on');show('scr-start');};
+$('w-again').onclick=()=>{S.click();showInterstitial().then(()=>startGame());};
+$('w-next').onclick=()=>{S.click();showInterstitial().then(()=>startGame(Math.min(LEVELS.length-1,curLvl+1)));};$('w-menu').onclick=()=>{S.click();$('ov-win').classList.remove('on');show('scr-start');};
+$('btn-sound').onclick=()=>{setSound(!sndOn);S.click();};setSound(sndOn);
+$('btn-lang').onclick=()=>{S.click();setLang(LANG==='ru'?'en':'ru');};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)togglePause();});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+/* сетка выбора грозди: все 10 открыты (техно-демо), пройденные — с галочкой и лучшим временем */
+function lvName(l){return LANG==='en'&&l.en?l.en:l.name;}
+function fmtT(t){return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+function buildGrid(){const g=$('colgrid');g.innerHTML='';const nx=nextLevelIdx();
+ LEVELS.forEach((l,i)=>{const d=document.createElement('div');const rec=PROG.done[l.n];
+  d.className='lvcard'+(rec?' done':'')+(i===nx?' next':'');d.tabIndex=0;d.setAttribute('role','button');d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();d.click();}};
+  let pv='';for(let k=0;k<4;k++){const c=l.cols[k%l.cols.length];const m=[.75,1,.9,.7][k];
+   pv+=`<div class="pv" style="background:rgb(${c[0]*255*m|0},${c[1]*255*m|0},${c[2]*255*m|0});height:${26*l.elong|0}px"></div>`;}
+  d.innerHTML=`<span class="num">${l.n}</span>${rec?'<span class="ok">✓</span>':''}<div class="pvw">${pv}</div><div class="nm">${lvName(l)}</div>
+   <div class="ft">${l.feats.map(f=>FEATS[f].svg).join('')}</div><div class="best">${rec?(rec.auto?'⚡ ':'')+T('best',{t:fmtT(rec.time)}):''}</div>`;
+  d.onclick=()=>{S.click();startGame(i);};g.appendChild(d);});
+ const n=Object.keys(PROG.done).length;$('progLine').innerHTML=T('progLine',{n,m:LEVELS.length})+'<br><span style="opacity:.6">v'+VERSION+'</span>';}
+applyLang();
+/* отладка для теста на телефоне: ?debug в адресе или 5 тапов по ВРЕМЯ — FPS, DPR, число объектов */
+let dbgOn=/[?&]debug/.test(location.search),dbgTaps=0,fpsAcc=0,fpsN=0,fpsShown=0,slowAcc=0,qualityDropped=false;
+$('dbg').classList.toggle('on',dbgOn);
+$('stTime').parentElement.addEventListener('click',()=>{if(++dbgTaps>=5){dbgTaps=0;dbgOn=!dbgOn;$('dbg').classList.toggle('on',dbgOn);}});
+function dbgTick(dt){fpsAcc+=dt;fpsN++;
+ /* автоснижение качества: если кадр стабильно дольше 28 мс — DPR→1 (один раз, как у Грави-Бума на телефоне) */
+ if(dt>.028)slowAcc+=dt;else slowAcc=Math.max(0,slowAcc-dt*.5);
+ if(slowAcc>2&&!qualityDropped&&DPR>1){qualityDropped=true;DPR_CAP=1;resize();}
+ if(fpsAcc>=.5){fpsShown=Math.round(fpsN/fpsAcc);fpsAcc=0;fpsN=0;
+  const lg=GLOG[GLOG.length-1];if(dbgOn)$('dbg').textContent=`v${VERSION}  fps ${fpsShown}  dpr ${DPR.toFixed(2)}${qualityDropped?' (снижено)':''}${lg?`  жест: ${lg.m==='cut'?'РЕЗ':'вращ'} ${lg.sp0.toFixed(2)} (пик ${lg.pk.toFixed(2)}) порог ${CFG.CUT_SPEED}`:''}\nягод ${berries.filter(b=>b.alive).length}  половинок ${halves.length}  частиц ${P.length}\n${W}x${H}  ягода ${unitPx|0}px  ${MOBILE?'mobile':'desktop'}`;}}
+TUNE.init();resize();initPlatform();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a45bb214df33bc80',t:'MTc5MTE5NTY0Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
