@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
+<meta name="theme-color" content="#0b1410"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Виноград-Бум! — техно-демо v0.8</title>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=IsrQxxIqGKoql58fQGSebSFXMkQKYhps17hR-aqnwRRqnFLt6ObBFQm-pf0SoP0vv6rDn-nZvzQGKEsCDSQPR_aHL3zJiEm0Z10DeE22g4rdWUA5SwxqILXwChlzLhmcOn6uRd6alOyXGYuoIVVCTQ" charset="UTF-8"></script><style>
+/* ===== Виноград-Бум — стили в духе Мат-Бум (тёмная тема, HUD поверх канваса) ===== */
+:root{
+  --gold:#e8c56a; --emerald:#7be28a; --ink:#e9e4d6; --mut:#9fb0a8;
+  --panel:rgba(16,30,24,.66); --panel-b:rgba(232,197,106,.25);
+  --bg1:#0e1a16; --bg2:#080f0d; --bg3:#04080a;
+  --btnbg:rgba(20,38,30,.82); --btnb:rgba(232,197,106,.4);
+  --hint:#cfe0d6; --hint2:#a8f2c0; --dim:#6f8378; --bad:#ff7a7a;
+  --chrome-h:48px;
+  --obox1:#17261f; --obox2:#0b1410; --mono:#cfe3d6; --monobg:rgba(0,0,0,.3); --rowtxt:#e6f0ea; --glow1:rgba(255,214,140,.10); --glow2:rgba(123,226,138,.09);
+}
+/* светлая тема (как в Мат-Буме 1): только переменные + пара теней */
+html[data-theme="light"]{
+  --gold:#8a6410; --emerald:#2f8f4a; --ink:#1e2a24; --mut:#51645b;
+  --panel:rgba(255,255,255,.72); --panel-b:rgba(138,100,16,.3);
+  --bg1:#f3f0e4; --bg2:#e6ebdf; --bg3:#d6e2d4;
+  --btnbg:rgba(255,255,255,.85); --btnb:rgba(138,100,16,.45);
+  --hint:#35463d; --hint2:#1f7a3c; --dim:#7a8a80; --bad:#c43c3c;
+  --obox1:#fbfaf4; --obox2:#e9eee3; --mono:#2a3a30; --monobg:rgba(0,0,0,.06); --rowtxt:#1e2a24; --glow1:rgba(255,214,140,.35); --glow2:rgba(123,226,138,.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none}
+body{font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;
+  background:
+   radial-gradient(1100px 500px at 50% -10%, var(--glow1), transparent 60%),
+   radial-gradient(800px 600px at 50% 112%, var(--glow2), transparent 60%),
+   linear-gradient(var(--bg1),var(--bg2) 55%,var(--bg3));
+  display:flex;flex-direction:column}
+button{cursor:pointer;border:1px solid var(--btnb);background:var(--btnbg);color:var(--ink);
+  border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;letter-spacing:1px;font-family:inherit}
+button:active{transform:scale(.94)}
+button.ghost{background:transparent}
+button.small{padding:6px 10px;font-size:13px}
+button[hidden]{display:none}
+button.primary{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05;border-color:#ffe9a3;box-shadow:0 0 18px rgba(255,220,120,.45)}
+@media (hover:hover){button:hover{filter:brightness(1.15)}}
+select{font:inherit;font-weight:700;background:var(--btnbg);color:var(--ink);border:1px solid var(--btnb);border-radius:10px;padding:7px 10px}
+/* верхняя панель */
+#chrome{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 12px 2px;height:var(--chrome-h);z-index:7}
+.chrome-c{display:flex;gap:6px;align-items:center}
+.ico-btn{min-width:42px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:16px}
+.ico-btn.off{opacity:.5;text-decoration:line-through}
+/* экраны */
+.screen{position:absolute;left:0;right:0;bottom:0;top:var(--chrome-h);display:none;flex-direction:column;z-index:1}
+.screen.on{display:flex}
+/* v0.6: средиземноморская сцена за меню, залом славы и справкой (рисуется на Canvas2D при старте, см. paintScene) */
+.screen.sea{background:var(--bg) center/cover no-repeat}
+.screen.sea::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,18,14,.30) 0%,rgba(8,18,14,.50) 45%,rgba(8,18,14,.76) 100%)}
+html[data-theme="light"] .screen.sea::before{background:linear-gradient(180deg,rgba(243,240,228,.20) 0%,rgba(243,240,228,.45) 45%,rgba(243,240,228,.76) 100%)}
+.screen.sea .screen-scroll{position:relative;z-index:1}
+.screen-scroll{flex:1;overflow:auto;padding:10px 16px 24px;-webkit-overflow-scrolling:touch}
+.center{max-width:640px;margin:0 auto;text-align:center}
+.logo{font-weight:900;letter-spacing:3px;font-size:clamp(30px,6vw,54px);color:var(--gold);text-shadow:0 0 22px rgba(232,197,106,.45)}
+.h1sub{font-size:clamp(13px,2.4vw,20px);letter-spacing:4px;color:var(--mut);font-weight:600;margin-top:2px}
+.menu-actions{display:flex;flex-direction:column;gap:12px;margin:22px auto 0;max-width:340px}
+.menu-actions button{font-size:17px;padding:13px 18px;border-radius:16px}
+.hallrow{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:8px 12px;margin:6px auto;max-width:460px;background:var(--panel);border:1px solid var(--panel-b);border-radius:12px;font-size:14px;text-align:left}
+.hallrow .rk{color:var(--dim);font-weight:700}.hallrow .nm{color:var(--rowtxt)}.hallrow .sc{color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}.hallrow .ex{color:var(--hint);font-size:12px}
+.hallrow.empty{grid-template-columns:1fr;color:var(--hint);text-align:center}
+#hallYa h3{color:var(--gold);letter-spacing:2px;font-size:14px;margin:18px 0 6px}
+.cutrow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--mut)}
+.cutrow select{font:inherit;font-weight:700;color:var(--ink);background:var(--btnbg);border:1px solid var(--btnb);border-radius:10px;padding:6px 10px}
+.ver{margin-top:22px;color:var(--dim);font-size:12px;letter-spacing:1px;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--panel-b);border-radius:16px;padding:14px 16px;margin-top:12px;text-align:left}
+.card h2{color:var(--gold);font-size:18px;letter-spacing:1px;margin-bottom:6px}
+.card p,.card li{color:var(--hint);font-size:14px;line-height:1.5}
+.card ul{padding-left:18px}
+.card b{color:var(--gold)}
+h2.scr-title{color:var(--gold);letter-spacing:2px;font-size:clamp(20px,4vw,30px);text-align:center;margin:6px 0 2px}
+.sub{color:var(--mut);font-size:13px;text-align:center}
+.lvlrow{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+/* сетка выбора грозди — как «Выбери колонну» в Мат-Буме */
+.colgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;max-width:700px;margin:14px auto 0}
+.lvcard{position:relative;background:var(--panel);border:1px solid var(--panel-b);border-radius:14px;padding:10px 8px 8px;cursor:pointer;text-align:center;transition:transform .15s}
+.lvcard:active{transform:scale(.96)}
+.lvcard.done{border-color:rgba(123,226,138,.6)}
+.lvcard.next{border-color:var(--gold);box-shadow:0 0 14px rgba(232,197,106,.35)}
+.lvcard .num{position:absolute;left:8px;top:6px;font-size:11px;color:var(--mut);font-weight:700}
+.lvcard .ok{position:absolute;right:8px;top:4px;color:var(--emerald);font-weight:900;font-size:14px}
+.lvcard .pvw{display:flex;justify-content:center;gap:3px;height:44px;align-items:flex-end;margin-top:8px}
+.lvcard .nm{font-size:11px;font-weight:700;color:var(--ink);margin-top:6px;line-height:1.2;min-height:27px}
+.lvcard .ft{display:flex;justify-content:center;gap:3px;margin-top:4px}
+.lvcard .ft svg{width:14px;height:14px}
+.lvcard .best{font-size:10px;color:var(--mut);margin-top:3px;min-height:12px}
+@media (hover:hover){.lvcard:hover{transform:translateY(-2px);filter:brightness(1.12)}}
+/* обучение: плашка шага, как trainPlate в Мат-Буме / «ОБУЧЕНИЕ · ШАГ x/6» в Грави-Буме */
+#trainPlate{display:none;margin:4px auto 0;max-width:520px;background:linear-gradient(rgba(232,197,106,.18),rgba(232,197,106,.08));border:1px solid var(--gold);border-radius:12px;padding:6px 10px;text-align:left;position:relative}
+#trainPlate.on{display:block}
+#trainPlate>b{display:block;color:var(--gold);font-size:11px;letter-spacing:2px}
+#trainPlate span b{color:var(--gold)}
+#trainPlate span{color:var(--ink);font-size:13px;line-height:1.3}
+#trainPlate button{position:absolute;right:6px;top:6px;padding:3px 8px;font-size:11px}
+#trainPlate button.next{right:auto;left:auto;position:static;display:block;margin:6px 0 0;padding:5px 14px;font-size:12px;font-weight:700;color:#1b2a22;background:var(--gold);border-color:var(--gold)}
+#dbg{position:fixed;left:6px;bottom:6px;font:11px/1.3 monospace;color:#9f9;background:rgba(0,0,0,.55);padding:4px 6px;border-radius:6px;z-index:30;display:none;pointer-events:none;white-space:pre}
+#dbg.on{display:block}
+.pv{width:22px;height:26px;border-radius:50%/52%;box-shadow:inset -6px -8px 14px rgba(0,0,0,.35),inset 6px 8px 12px rgba(255,255,255,.25)}
+/* игровой экран */
+#scr-game{overflow:hidden}
+#hud{display:flex;gap:6px;align-items:stretch;justify-content:center;padding:2px 10px 0;flex-wrap:nowrap;z-index:5}
+.stat{background:var(--panel);border:1px solid var(--panel-b);border-radius:12px;padding:5px 10px;min-width:64px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.stat b{font-size:18px;color:var(--gold);line-height:1.1}
+.stat span{font-size:10px;letter-spacing:1px;color:var(--mut)}
+/* v0.8: панель заказа */
+#orderBar{display:none;align-items:center;justify-content:center;gap:10px;margin:5px 10px 0;padding:4px 10px;background:var(--panel);border:1px solid var(--gold);border-radius:12px;min-height:40px}
+#orderBar.on{display:flex}
+#orderBar.free{opacity:.55;border-color:var(--panel-b)}
+#ordLbl{font-size:11px;letter-spacing:2px;color:var(--gold);font-weight:700}
+#ordSlots{display:flex;gap:8px}
+.oslot{position:relative;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.55) 0,var(--bc) 42%,rgba(0,0,0,.35) 100%),var(--bc);border:3px solid var(--gold);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.oslot.over1{border-color:#ffbe46;border-style:dashed}
+.oslot.over2{border-color:#ff5a46}
+.oslot svg{width:18px;height:18px;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
+.oslot em{display:none;position:absolute;inset:-3px;border-radius:50%;background:rgba(20,30,24,.72);color:#7ef0b2;font-style:normal;font-weight:900;font-size:18px;align-items:center;justify-content:center}
+.oslot.done em{display:flex}
+#ordTimer{font-size:16px;color:var(--gold);min-width:36px;text-align:center}
+#ordTimer[hidden]{display:none}
+#pbar{height:5px;margin:5px 12px 0;background:var(--panel);border-radius:3px;overflow:hidden}
+#pbarI{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--emerald));width:0%;transition:width .3s}
+#hint{text-align:center;padding:5px 12px 0;min-height:40px;z-index:5}
+#hint1{color:var(--hint);font-size:13px}
+#hint2{color:var(--hint2);font-size:13px;font-weight:700;margin-top:1px}
+#stage{position:relative;flex:1;min-height:120px;cursor:crosshair}
+#stage::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 50%,transparent 55%,rgba(0,0,0,.28) 100%)}
+html[data-theme="light"] #stage::after{background:radial-gradient(ellipse 70% 60% at 50% 50%,transparent 55%,rgba(60,80,60,.14) 100%)}
+body.stress #stage::after{background:radial-gradient(ellipse 70% 60% at 50% 50%,transparent 40%,rgba(60,0,0,.55) 100%);animation:stressPulse 1.1s ease-in-out infinite}
+@keyframes stressPulse{50%{opacity:.6}}
+#stage.grabbing{cursor:grabbing}
+#stage.cutting{cursor:crosshair}
+.toast{position:absolute;left:50%;top:10px;transform:translate(-50%,-20px);opacity:0;transition:.35s;z-index:7;max-width:min(92%,420px);background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--ink);text-align:center;pointer-events:none;backdrop-filter:blur(4px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}.toast b{color:var(--gold)}
+#gl,#fx{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#ctrl{display:flex;justify-content:center;gap:10px;padding:6px 10px 10px;z-index:5}
+#ctrl button{min-width:56px;min-height:44px;font-size:20px;border-radius:14px}
+#ctrl button.txt{font-size:13px;min-width:84px}
+#bU,#bD{font-size:12px}
+@media (max-width:400px){#ctrl button.txt{min-width:70px;padding:10px 6px}#ctrl button{padding-left:8px;padding-right:8px}}
+#bAuto.on{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05;border-color:#ffe9a3}
+/* оверлеи */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,8,10,.72);z-index:20;padding:16px}
+.overlay.on{display:flex}
+.obox{background:linear-gradient(var(--obox1),var(--obox2));border:1px solid var(--panel-b);border-radius:20px;padding:22px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.obox h1{color:var(--gold);letter-spacing:2px;font-size:26px;margin-bottom:10px}
+.obox p{color:var(--hint);font-size:14px;line-height:1.5;margin:6px 0}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.tune{text-align:left;margin:8px 0}.tune label{display:flex;justify-content:space-between;font-size:13px;color:var(--hint)}.tune label b{color:var(--gold);font-variant-numeric:tabular-nums}
+.tune input[type=range]{width:100%;accent-color:var(--gold);margin-top:2px}
+#gestLine{white-space:pre-line;text-align:left;margin-top:4px}
+#tuneLine,#gestLine{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--mono);background:var(--monobg);border-radius:8px;padding:6px 8px;user-select:all;-webkit-user-select:all}
+/* всплывающий текст */
+.ftext{position:fixed;transform:translate(-50%,-50%);font-weight:900;font-size:18px;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.7);pointer-events:none;z-index:15;animation:ft 1s ease-out forwards;white-space:nowrap}
+.ftext.big{font-size:28px;color:var(--gold)}
+.ftext.bad{color:var(--bad)}
+.ftext.pts{font-size:15px;color:var(--gold)}.ftext.pts.bad{color:var(--bad)}
+@keyframes ft{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+#shaker.shake{animation:shk .45s linear}
+@keyframes shk{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+@media (max-width:420px){.stat{min-width:50px;padding:4px 5px}.stat b{font-size:15px}.stat span{font-size:9px;letter-spacing:.5px}#hint1{font-size:12px}#hud{gap:4px;padding:2px 6px 0}}
+/* короткий ландшафт (телефон боком): HUD слева колонкой, кнопки справа, подсказка снизу — сцена во всю высоту */
+@media (orientation:landscape) and (max-height:520px){
+  :root{--chrome-h:40px}
+  #chrome{padding:4px 8px 0;height:var(--chrome-h)}
+  #scr-game #hud{position:absolute;left:8px;top:6px;flex-direction:column;gap:6px;z-index:6;padding:0}
+  #scr-game .stat{min-width:70px}
+  #scr-game #pbar{position:absolute;left:8px;right:8px;bottom:4px;margin:0;z-index:6}
+  #scr-game #hint{position:absolute;left:8px;right:8px;bottom:12px;padding:0;min-height:0;z-index:6}
+  #scr-game #ctrl{position:absolute;right:8px;top:50%;transform:translateY(-50%);flex-direction:column;padding:0;z-index:6}
+  #scr-game #ctrl button{min-width:52px;min-height:44px}
+  #scr-game #ctrl button.txt{min-width:52px;font-size:11px;padding:6px}
+  body #cue{bottom:30%;left:26%;max-width:200px}
+}
+html[data-theme="light"] .logo{text-shadow:0 1px 0 #fff,0 0 18px rgba(180,130,20,.35)}
+html[data-theme="light"] .ftext{color:#1e2a24;text-shadow:0 0 10px rgba(255,255,255,.9)}
+html[data-theme="light"] #cue .lbl{text-shadow:0 0 6px #fff}
+html[data-theme="light"] .overlay{background:rgba(230,236,226,.7)}
+html[data-theme="light"] #trainPlate{background:rgba(255,255,255,.8)}
+html[data-theme="light"] #bAuto.on{background:linear-gradient(#ffe9a3,#d9a83f);color:#3a2a05}
+@media (prefers-reduced-motion:reduce){#cue .hand{animation:none}#shaker{animation:none!important}.ftext{animation-duration:.4s}}
+button:focus-visible,.lvcard:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* подсказка-жест при первом запуске */
+#cue{position:absolute;left:50%;bottom:9%;transform:translate(-50%,0);pointer-events:none;z-index:4;display:none;text-align:center;color:var(--hint)}
+#cue.on{display:block}
+#cue .hand{font-size:40px;display:inline-block;animation:cue 2.6s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(0,0,0,.8))}
+#cue .lbl{font-size:12px;letter-spacing:1px;margin-top:4px;text-shadow:0 0 6px #000}
+@keyframes cue{0%{transform:translateX(-50px)}40%{transform:translateX(50px)}55%{transform:translateX(50px) scale(1)}62%{transform:translateX(-40px) rotate(-30deg) scale(1.15)}75%{transform:translateX(-50px) rotate(0) scale(1)}100%{transform:translateX(-50px)}}
+</style>
+</head>
+<body>
+
+<div id="chrome"><div class="chrome-c">
+  <button class="ghost small" id="btn-back" type="button" hidden data-t="back">← Меню</button>
+  <button class="ghost small ico-btn" id="btn-sound" type="button" title="Звук">🔊</button>
+  <button class="ghost small ico-btn" id="btn-help" type="button" title="Справка">?</button>
+  <button class="ghost small ico-btn" id="btn-theme" type="button" title="Тема">☀</button>
+  <button class="ghost small ico-btn" id="btn-lang" type="button" title="Language"><span id="langLbl">EN</span></button>
+</div></div>
+
+<!-- ===== Стартовый экран ===== -->
+<section class="screen sea on" id="scr-start"><div class="screen-scroll"><div class="center" style="padding-top:4vh">
+  <div class="logo" data-t="logo">ВИНОГРАД-БУМ!</div>
+  <div class="h1sub" data-t="sub">ОЧИСТЬ ГРОЗДЬ ОТ ЯГОД</div>
+  <div class="menu-actions" style="margin-top:16px">
+    <button class="primary" id="b-play" type="button" data-t="play">▶ ИГРАТЬ</button>
+    <button id="b-train" type="button" data-t="train">ОБУЧЕНИЕ</button>
+    <button id="b-hall" type="button" data-t="hall">ЗАЛ СЛАВЫ</button>
+    <button id="b-help" type="button" data-t="help">СПРАВКА</button>
+  </div>
+  <p class="sub" style="margin-top:18px;letter-spacing:2px" data-t="choose">ВЫБЕРИ ГРОЗДЬ</p>
+  <div class="colgrid" id="colgrid"></div>
+  <p class="ver" id="progLine">ТЕХНО-ДЕМО · 10 гроздей · 3 слоя в каждой<br>Медленно тяни — вращай. Быстро проведи — режь.</p>
+</div></div></section>
+
+<!-- ===== Справка ===== -->
+<section class="screen sea" id="scr-help"><div class="screen-scroll"><div class="center">
+  <h2 class="scr-title" data-t="help">СПРАВКА</h2>
+  <div id="helpBody"></div>
+  <div class="btns"><button id="help-back" type="button" data-t="backBtn">Назад</button></div>
+</div></div></section>
+
+<section class="screen sea" id="scr-hall"><div class="screen-scroll"><div class="center">
+  <h2 class="scr-title" data-t="hall">ЗАЛ СЛАВЫ</h2>
+  <p class="sub" data-t="hallSub">Твои рекорды по гроздям</p>
+  <div id="hallList"></div>
+  <p class="sub" id="hallTotal" style="margin-top:12px"></p>
+  <div id="hallYa"></div>
+  <div class="btns"><button id="hall-back" type="button" data-t="backBtn">Назад</button></div>
+</div></div></section>
+
+<!-- ===== Игра ===== -->
+<section class="screen" id="scr-game">
+ <div id="shaker" style="display:contents">
+  <div id="hud">
+    <div class="stat"><b id="stLayer">1/3</b><span data-t="layer">СЛОЙ</span></div>
+    <div class="stat"><b id="stBerries">0</b><span data-t="berries">ЯГОД</span></div>
+    <div class="stat"><b id="stTime">0:00</b><span data-t="time">ВРЕМЯ</span></div>
+    <div class="stat"><b id="stScore">0</b><span data-t="score">ОЧКИ</span></div>
+  </div>
+  <div id="pbar"><i id="pbarI"></i></div>
+  <div id="orderBar"><span id="ordLbl" data-t="order">ЗАКАЗ:</span><div id="ordSlots"></div><b id="ordTimer" hidden></b></div>
+  <div id="hint"><div id="hint1" data-t="hint1">Вращай правой кнопкой мыши · Режь левой кнопкой мыши</div><div id="hint2"></div><div id="trainPlate"><b id="trStep"></b><span id="trText"></span><button id="trNext" type="button" class="next" data-t="nextStep" hidden>Далее</button><button id="trSkip" type="button" class="ghost" data-t="skip">Пропустить</button></div></div>
+  <div id="stage"><canvas id="gl"></canvas><canvas id="fx"></canvas><div id="cue"><span class="hand">☝️</span><div class="lbl" data-t="cue">правой кнопкой мыши — вращай · левой кнопкой мыши — режь</div></div></div>
+  <div id="ctrl">
+    <button id="bL" type="button" title="Повернуть влево">⟲</button>
+    <button id="bU" type="button" title="Наклонить вверх">▲</button>
+    <button id="bPause" type="button" class="txt" data-t="pause">ПАУЗА</button>
+    <button id="bAuto" type="button" class="txt" data-t="auto" title="Авто-разрез текущего слоя">⚡ АВТО</button>
+    <button id="bD" type="button" title="Наклонить вниз">▼</button>
+    <button id="bR" type="button" title="Повернуть вправо">⟳</button>
+  </div>
+ </div>
+</section>
+
+<div id="dbg"></div>
+<div class="overlay" id="ov-pause"><div class="obox">
+  <h1 data-t="pause">ПАУЗА</h1>
+  <div class="btns"><button id="p-resume" type="button" class="primary" data-t="resume">Продолжить</button><button id="p-exit" type="button" class="ghost" data-t="menu">В меню</button><button id="p-tune" type="button" class="ghost" data-t="tune">⚙ Настройка</button></div>
+</div></div>
+
+<div class="overlay" id="ov-tune"><div class="obox">
+  <h1 data-t="tuneTitle">НАСТРОЙКА</h1>
+  <p data-t="tuneSub">Подберите значения на своём телефоне и пришлите строку снизу.</p>
+  <div class="tune"><label><span data-t="tMin">Мин. длина свайпа, px</span><b id="v-min"></b></label><input type="range" id="r-min" min="10" max="50" step="2"></div>
+  <div class="tune"><label><span data-t="tSize">Размер ягод</span><b id="v-size"></b></label><input type="range" id="r-size" min="0.75" max="1.35" step="0.05"></div>
+  <div class="tune"><label><span data-t="tRot">Чувствительность вращения</span><b id="v-rot"></b></label><input type="range" id="r-rot" min="0.2" max="0.8" step="0.05"></div>
+  <div class="tune"><label><span data-t="tDamp">Инерция</span><b id="v-damp"></b></label><input type="range" id="r-damp" min="0.85" max="0.98" step="0.01"></div>
+  <div class="tune"><label><span data-t="tBg">Поворот фона с гроздью</span><b id="v-bg"></b></label><input type="range" id="r-bg" min="0" max="1" step="0.05"></div>
+  <p id="tuneLine" class="mono"></p>
+  <p id="gestLine" class="mono"></p>
+  <div class="btns"><button id="t-reset" type="button" class="ghost" data-t="tReset">Сброс</button><button id="t-copy" type="button" class="ghost" data-t="tCopy">Скопировать</button><button id="t-back" type="button" class="primary" data-t="backBtn">← Назад</button></div>
+</div></div>
+
+<div class="overlay" id="ov-win"><div class="obox">
+  <h1 data-t="cleared">ГРОЗДЬ ОЧИЩЕНА!</h1>
+  <p id="win-info"></p>
+  <div class="btns"><button id="w-menu" type="button" class="ghost" data-t="menu">В меню</button><button id="w-again" type="button" data-t="again">Ещё раз</button><button id="w-next" type="button" class="primary" data-t="next">Дальше →</button></div>
+</div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   ВИНОГРАД-БУМ · техно-демо
+   Стек — как в Мат-Бум 1/2: чистый WebGL1 (без библиотек), HTML/CSS HUD,
+   частицы и след ножа — на 2D-канвасе поверх, звук — синтез WebAudio.
+   Жесты — как в Грави-Бум: один pointer-поток, режим жеста фиксируется
+   по скорости ('rot' — вращение/наклон, 'cut' — разрез).
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const MOBILE=matchMedia('(pointer:coarse)').matches||/Android|iPhone|iPad/i.test(navigator.userAgent);
+const VERSION='0.8';
+
+/* ---------- настройки геймплея (всё в одном месте для тюнинга) ---------- */
+const CFG={
+  CUT_SPEED:0.35,    // px/мс — базовая скорость взмаха: от превышения зависит сила разлёта половинок (сам рез скорости не требует — v0.4)
+  CUT_MIN:20,        // px — короче: случайное касание/тап, не рез
+  BG_PAR:0.6,        // v0.5: доля поворота грозди, на которую поворачивается фон (1 — жёстко вместе, меньше — спокойнее)
+  BG_FOV:64,         // градусы — поле зрения фона по вертикали (шире, чем у грозди: фон «далеко»)
+  BG_TILT:0.6,       // доля наклона грозди, передаваемая фону
+  /* v0.6 — геймплей */
+  CHAIN_R:[2.5,2.0,1.5], // радиус цепной реакции по слоям (мировые единицы)
+  COMBO_MS:5000,     // окно комбо после разблокировки слоя
+  STRESS_MS:7000,    // в стресс-режиме ягоды перезревают каждые N мс
+  LAYER_T:[210,150,110], // лимит времени на слой, с: уровни 1–3 / 4–6 / 7–10
+  RIPE_CAP:6,        // дозревание не доводит до спелости, если спелых уже столько: иначе с перезреванием гниль неизбежна
+  CUT_PRESETS:[0.35,0.55,0.9], // режимы «Низкий — резать легко» / «Средний» / «Высокий — только резкий взмах»
+  ROT_K:0.45,        // град/px — как в Мат-Бум
+  TILT_K:0.22, TILT_MAX:40,
+  DAMP:0.94,         // инерция вращения (за кадр), как в Мат-Бум
+  CLOSE_MS:5000,     // ошибка: ягода закрыта 5 с
+  RAISE_N:4,         // тройка повышает 4 ягоды
+  LAYERS:[23,21,16], // ягод на слой по умолчанию (60; 23 и 16 — чтобы сработал пересчёт); уровни 4+ — см. LEVELS.layers
+  SIZE:[.85,.92,1],  // размер по спелости
+  FOV:25*Math.PI/180,
+  SIZE_MUL:1         // общий множитель размера ягод (панель настройки)
+};
+const FEATS=[
+ {id:'dew', name:'роса',     who:'с росой',
+  svg:'<svg viewBox="0 0 20 20"><path d="M10 2 C7 7 4 10 4 13 a6 6 0 0 0 12 0 c0-3-3-6-6-11z" fill="#cfefff"/><circle cx="8" cy="13" r="1.5" fill="#fff"/></svg>'},
+ {id:'seed',name:'косточки',who:'с косточками',
+  svg:'<svg viewBox="0 0 20 20"><ellipse cx="7" cy="10" rx="2.6" ry="4.2" fill="#3b2314" transform="rotate(-15 7 10)"/><ellipse cx="13" cy="10" rx="2.6" ry="4.2" fill="#3b2314" transform="rotate(15 13 10)"/></svg>'},
+ {id:'bub', name:'пузырьки',who:'с пузырьками',
+  svg:'<svg viewBox="0 0 20 20" fill="none" stroke="#d8f4ff" stroke-width="1.6"><circle cx="7" cy="13" r="3"/><circle cx="13" cy="8" r="2.4"/><circle cx="12" cy="15" r="1.4"/></svg>'}
+];
+/* Палитры 10 уровней из концепции (демо использует геометрию одного уровня, меняется только палитра/признаки/спелость) */
+const LEVELS=[
+ {n:1, name:'Белый (Thompson)',en:'White (Thompson)',          cols:[[.46,.82,.40]],                 flesh:[.80,.95,.66], juice:'170,235,120', feats:[0],     dist:[.6,.25,.15], elong:1.12, dens:1.0},
+ {n:2, name:'Чёрный (Isabel)',en:'Black (Isabella)',           cols:[[.40,.15,.55]],                 flesh:[.78,.55,.80], juice:'170,70,200',  feats:[0,1],   dist:[.6,.25,.15], elong:1.08, dens:1.0},
+ {n:3, name:'Чёрно-белый',en:'Black & White',               cols:[[.22,.10,.30],[.85,.88,.62]],   flesh:[.85,.80,.70], juice:'200,150,210', feats:[1,2],   dist:[.6,.25,.15], elong:1.1,  dens:1.0},
+ {n:4, name:'Дамские пальчики белый',en:"Lady's Fingers White",    cols:[[.92,.86,.45]],                 flesh:[.97,.95,.75], juice:'240,230,140', feats:[0,2],   dist:[.5,.3,.2],   elong:1.8, thin:.78, dy:1.22, dens:.92},
+ {n:5, name:'Дамские пальчики красный',en:"Lady's Fingers Red",  cols:[[.90,.42,.58]],                 flesh:[.98,.78,.85], juice:'240,120,160', feats:[1,0],   dist:[.5,.3,.2],   elong:1.8, thin:.78, dy:1.22, dens:.92},
+ {n:6, name:'Дамские пальчики красно-белый',en:"Lady's Fingers Red-White",cols:[[.90,.42,.58],[.92,.88,.62]],flesh:[.98,.85,.85], juice:'240,150,170', feats:[2,1],   dist:[.5,.3,.2],   elong:1.75, thin:.78, dy:1.2, dens:.92},
+ {n:7, name:'Радужный виноград',en:'Rainbow Grapes',         cols:[[.9,.3,.3],[.95,.6,.2],[.9,.85,.3],[.4,.8,.4],[.3,.6,.9],[.6,.35,.8]],flesh:[.95,.9,.8],juice:'255,200,120',feats:[0,1,2],dist:[.4,.35,.25],elong:1.12,dens:.9},
+ {n:8, name:'Японский рубиновый римский',en:'Ruby Roman (Japan)',cols:[[.65,.10,.22]],                 flesh:[.95,.65,.70], juice:'220,60,90',   feats:[1,2],   dist:[.4,.35,.25], elong:1.0,  dens:.9,  size:1.08},
+ {n:9, name:'Пузатые звёздочки',en:'Chubby Stars',         cols:[[.70,.55,.92]],                 flesh:[.92,.88,1],   juice:'200,180,255', feats:[0,1],   dist:[.4,.35,.25], elong:0.95, dens:.86, shape:2},
+ {n:10,name:'Сердечки',en:'Hearts',                  cols:[[.98,.45,.65],[.95,.6,.75]],    flesh:[1,.85,.9],    juice:'255,140,180', feats:[0,1,2], dist:[.4,.35,.25], elong:1.2,  dens:.86, shape:1},
+];
+
+/* v0.6: ягод больше — уровни 1–3: 61, 4–6: 69, 7–10: 78 */
+function lvLayers(l){return l.n<=3?[32,28,21]:(l.n<=6?[36,32,24]:[40,36,28]);} /* v0.7: +1/3 — 81 / 92 / 104 */
+function lvLayerT(l){return CFG.LAYER_T[l.n<=3?0:(l.n<=6?1:2)];}
+/* =============== локализация RU/EN (словарь + T(), как в Мат-Бум) =============== */
+const I18N={
+ru:{logo:'ВИНОГРАД-БУМ!',title:'Виноград-Бум! — техно-демо v0.8',back:'← Меню',sub:'ОЧИСТЬ ГРОЗДЬ ОТ ЯГОД',play:'▶ ИГРАТЬ',train:'ОБУЧЕНИЕ',help:'СПРАВКА',choose:'ВЫБЕРИ ГРОЗДЬ',backBtn:'Назад',
+ layer:'СЛОЙ',berries:'ЯГОД',triple:'ТРОЙКА',time:'ВРЕМЯ',hint1:'Вращай {rot} · Режь {cut}',cue:'{rot} — вращай · {cut} — режь',mRot:'двумя пальцами',mCut:'одним пальцем',dRot:'правой кнопкой мыши',dCut:'левой кнопкой мыши',
+ hall:'ЗАЛ СЛАВЫ',hallSub:'Твои рекорды по гроздям · +10 срез, +100 заказ, +5 бонус, +50 серия, +100 слой, +200 гроздь + секунды в запасе · −10 не из заказа, −15 сырая',hallEmpty:'Пока нет рекордов — очисти первую гроздь!',hallTotal:'Всего очков: {n} · пройдено {a}/{b}',hallOnline:'ОНЛАЙН-РЕКОРДЫ',hallAuto:'(с ⚡ АВТО — не в зачёт)',hallPts:'{n} очк.',winPts:'Очки: <b style="color:var(--gold)">{p}</b>{rec}',winRec:'<b style="color:#7ef0b2">новый рекорд!</b>',skip:'Пропустить',pause:'ПАУЗА',auto:'⚡ АВТО',tune:'⚙ Настройка',tuneTitle:'НАСТРОЙКА',tuneSub:'Подберите значения на своём телефоне и пришлите строку снизу.',tMin:'Мин. длина свайпа, px',tSize:'Размер ягод',tRot:'Чувствительность вращения',tDamp:'Инерция',tBg:'Поворот фона с гроздью',tReset:'Сброс',tCopy:'Скопировать',gRot:'↻ вращения (пик px/мс):',gCut:'✂ резы (пик px/мс, · = промах):',resume:'Продолжить',menu:'В меню',cleared:'ГРОЗДЬ ОЧИЩЕНА!',again:'Ещё раз',next:'Дальше →',
+ progLine:'Пройдено гроздей: <b style="color:var(--gold)">{n}/{m}</b> · ТЕХНО-ДЕМО<br>Вращай {rot}, режь {cut}.',
+ best:'лучшее {t}',tutStep:'ОБУЧЕНИЕ · ШАГ {a}/{b}',
+ order:'ЗАКАЗ:',hintOrder:'Режь только ягоды из заказа (подсвечены). Другие — штраф −10',hintOrderLeft:'Заказ: осталось {n} — режь подсвеченные',hintFree:'Заказ выполнен — режь любые спелые ягоды · серия {n}/3',
+ winInfo:'Сорт: <b>{name}</b><br>Время {t} · разрезов {c} · заказов {o} · серий {tr} · ошибок {m}',winBreak:'срезы {c} · заказы {o} · бонус {bn} · серии {tr} · слои {l} · гроздь {b} · время +{t} · штрафы {pen}',score:'ОЧКИ',
+ ftTriple:'СЕРИЯ!',ftOrder:'ЗАКАЗ ВЫПОЛНЕН!',ftNewOrder:'НОВЫЙ ЗАКАЗ',ftOrderBurn:'ЗАКАЗ СГОРЕЛ — новый',ftBonus:'+{n} БОНУС!',ftNotOrder:'не из заказа',ftGoldSlot:'ЗОЛОТАЯ: слот закрыт',ftGoldFree:'ЗОЛОТАЯ: −{n} лишних',hintGoldSlot:'★ Золотая закрыла один слот заказа (+25)',hintGoldFree:'★ Золотая: заказ уже выполнен — убрала {n} лишних ягод (+25)',tutOnlyLit:'в обучении — только подсвеченные',tutPressNext:'нажми «Далее»',tutDoStep:'сначала выполни шаг',ftRaw:'сырая',ftOther:'другой признак',ftLayer:'СЛОЙ {n} ОТКРЫТ',ftOver:'перезрела',ftRot:'сгнила',ftGold:'ЗОЛОТАЯ ×2',ftIce:'ЗАМОРОЗКА',ftChain:'волна +{n}',ftCombo:'СЕРИЯ ×{n}!',ftStress:'СТРЕСС! ягоды перезревают',stress:'СТРЕСС',hintIceDone:'❄ Ледяная: {n} соседних ягод заморожены на 2 хода — они не перезревают',toastGold:'<b>★ Золотая ягода</b> на этом слое: разрежь — она закроет <b>один слот</b> заказа, а если заказ уже выполнен — уберёт 3 лишние ягоды (+25).',toastIce:'<b>❄ Ледяная ягода</b> на этом слое: разрежь — <b>заморозит</b> 6 соседних на 2 хода, они не будут перезревать.',ftAutoOff:'АВТО: слой срезан — дальше вручную',nextStep:'Далее',
+ feat:['роса','косточки','пузырьки'],who:['с росой','с косточками','с пузырьками'],
+ tut:['Поверни гроздь: потяни <b>{rot}</b> влево или вправо.','Наклони гроздь: потяни {rot} вверх или вниз (есть и кнопки ▲ ▼).',
+  'Смотри на панель <b>ЗАКАЗ</b> вверху: три иконки показывают, какие ягоды нужны — признак и состояние. Подходящие ягоды подсвечены золотым кольцом. Проведи <b>{cut}</b> по одной из них.',
+  'Слот закрылся. Разрежь ещё две подсвеченные — и заказ готов. В обучении другие ягоды резать нельзя.',
+  '<b>Заказ выполнен</b> (+100) → <b>бонус-магнит</b>: до 5 лишних ягод исчезают сами (+5 за каждую). Затем лишние до кратности трём растворяются, а четыре ягоды дозревают.',
+  '<b>Ошибка</b> — срез ягоды не из заказа: штраф −10 (счёт не уходит ниже нуля), ягода закрывается на 5 секунд. Слой можно пройти даже при нуле очков.',
+  '<b>Перезрелые — тоже часть заказа.</b> Кольцо на иконке заказа и вокруг ягоды: золотое — спелая, янтарный пунктир — перезрела 1, красное — перезрела 2 (вне заказа такие дают −5/−10, потом гниют −20). Нужные для заказа ягоды не портятся — игра гарантирует, что они появятся.',
+  '<b>Золотая ягода</b> (подсвечена, поверни гроздь, если не видно): закрывает один слот заказа, а если заказ уже выполнен — убирает 3 лишние ягоды (+25). Разрежь её.',
+  '<b>Ледяная ягода</b> (подсвечена): замораживает 6 соседних на 2 хода — они не перезревают. Разрежь её.',
+  '<b>После заказа — свободная фаза:</b> режь любые спелые (подсвечены). Каждые три среза — <b>серия</b> +50: лишние растворяются, четыре дозревают. Следующая серия за 5 секунд — комбо ×2, ×3…',
+  '<b>Таймер слоя</b> (плашка ВРЕМЯ). Когда он на нуле — <b>стресс</b>: ягоды перезревают каждые 7 секунд, бонуса за слой нет, но слой можно пройти. В обучении таймер стоит.',
+  'Теперь очисти весь слой.','Проснулся следующий слой — и новый заказ. Очисти все три — и гроздь твоя. Удачи!'],
+ helpHtml:`<div class="card"><h2>Цель</h2><p>Очисти гроздь: три слоя ягод. Активен внешний слой, внутренние «спят» (тусклые) и просыпаются по очереди. На каждом слое сначала — <b>заказ</b>, потом свободная фаза.</p></div>
+  <div class="card"><h2>Управление</h2><ul><li><b>Мышь:</b> <b>правая</b> кнопка — вращение грозди (влево-вправо) и наклон (вверх-вниз); <b>левая</b> кнопка — разрез.</li>
+  <li><b>Сенсорный экран:</b> <b>два пальца</b> — вращение и наклон; <b>один палец</b> — разрез.</li>
+  <li>Одно движение режет одну ягоду (не короче 20 px). Направление задаёт раскол: вертикаль, горизонталь или диагонали. Скорость движения влияет только на силу разлёта половинок.</li>
+  <li>Кнопки ⟲ ⟳ ▲ ▼ и стрелки ← → ↑ ↓ тоже вращают и наклоняют гроздь. ⚡ АВТО срезает только <b>текущий слой</b>, дальше — вручную. Кнопка <b>ОБУЧЕНИЕ</b> в меню — пошаговая тренировка на первой грозди.</li></ul></div>
+  <div class="card"><h2>Заказ</h2><ul><li>Панель <b>ЗАКАЗ</b> под счётом — три ягоды: <b>признак</b> (роса, косточки, пузырьки) и <b>состояние</b> по кольцу: золотое — спелая, янтарный пунктир — перезрелая 1, красное — перезрелая 2. Сырые и средние ягоды в заказе не бывают.</li>
+  <li>Режь <b>только</b> ягоды из заказа — они подсвечены золотым кольцом (слабое кольцо — ягода скоро станет подходящей). Срез ягоды не из заказа — штраф −10 и ягода закрыта на 5 секунд. Счёт не уходит ниже нуля, слой можно пройти и при нуле.</li>
+  <li>Закрыл все три слота — <b>заказ выполнен</b> (+100) и срабатывает <b>бонус-магнит</b>: до 5 лишних ягод (соседи срезанных и бесполезные для будущих заказов) исчезают сами, +5 за каждую.</li>
+  <li>Нужные для заказа ягоды не перезревают, а если их нет на слое — игра дозревает (или перезревает) подходящую. На грозди 8 у заказа свой <b>таймер</b> (10/12/15 с): не успел — заказ сгорает и выдаётся новый, без штрафа. На гроздях 9–10 на слое несколько заказов подряд.</li></ul></div>
+  <div class="card"><h2>Свободная фаза и очки</h2><ul><li>После заказа режь любые <b>спелые</b> ягоды. Каждые три среза — <b>серия</b> (+50 × комбо): лишние ягоды слоя (остаток от деления на 3) растворяются, затем <b>4 случайные</b> дозревают, а третья ягода серии дозревает соседей с тем же признаком (<b>волна</b>).</li>
+  <li><b>Очки:</b> +10 срез, +100 заказ, +5 за ягоду бонуса, +50 серия (× комбо), +100 очищенный слой, +200 гроздь плюс секунды в запасе (из 600), +25 золотая. Штрафы: −10 не из заказа, −15 сырая, −5/−10 перезрелая, −20 сгнившая.</li>
+  <li><b>Комбо:</b> следующая серия в течение 5 с после предыдущей даёт ×2, ×3…</li></ul></div>
+  <div class="card"><h2>Перезревание, время, спец-ягоды</h2><ul><li>После каждой серии спелые ягоды, которые не были срезаны, <b>перезревают</b>: янтарное кольцо (−5 при срезе вне заказа), потом красное (−10), потом ягода <b>сгнивает</b> (−20). Только что дозревшие (белый ореол) один шаг пропускают.</li>
+  <li>На каждый слой — <b>лимит времени</b> (3:30 / 2:30 / 1:50 по сложности). Когда он вышел — <b>стресс</b>: ягоды перезревают каждые 7 секунд, бонуса за слой нет, но слой всё ещё можно пройти.</li>
+  <li><b>Золотая</b> ягода (одна на слой): закрывает один слот заказа, а после заказа убирает 3 лишние ягоды; +25.</li>
+  <li><b>Ледяная</b> ягода (слои 2–3, с 4-й грозди) — <b>замораживает</b> 6 ближайших ягод на 2 хода: они не перезревают.</li>
+  <li>Слой пуст — просыпается следующий. Три слоя — гроздь очищена!</li></ul></div>`},
+en:{logo:'VINE-BOOM!',title:'Vine-Boom! — tech demo v0.8',back:'← Menu',sub:'CLEAR THE BUNCH',play:'▶ PLAY',train:'TUTORIAL',help:'HELP',choose:'PICK A BUNCH',backBtn:'Back',
+ layer:'LAYER',berries:'BERRIES',triple:'TRIPLE',time:'TIME',hint1:'Rotate: {rot} · Slice: {cut}',cue:'{rot} — rotate · {cut} — slice',mRot:'two fingers',mCut:'one finger',dRot:'right mouse button',dCut:'left mouse button',
+ hall:'HALL OF FAME',hallSub:'Your records per bunch · +10 slice, +100 order, +5 bonus, +50 run, +100 layer, +200 bunch + spare seconds · −10 not in order, −15 unripe',hallEmpty:'No records yet — clear your first bunch!',hallTotal:'Total points: {n} · cleared {a}/{b}',hallOnline:'ONLINE RECORDS',hallAuto:'(with ⚡ AUTO — not ranked)',hallPts:'{n} pts',winPts:'Points: <b style="color:var(--gold)">{p}</b>{rec}',winRec:'<b style="color:#7ef0b2">new record!</b>',skip:'Skip',pause:'PAUSE',auto:'⚡ AUTO',tune:'⚙ Tuning',tuneTitle:'TUNING',tuneSub:'Find values that feel right on your phone and send the line below.',tMin:'Min swipe length, px',tSize:'Berry size',tRot:'Rotation sensitivity',tDamp:'Inertia',tBg:'Background follows rotation',tReset:'Reset',tCopy:'Copy',gRot:'↻ rotations (peak px/ms):',gCut:'✂ cuts (peak px/ms, · = miss):',resume:'Resume',menu:'Menu',cleared:'BUNCH CLEARED!',again:'Again',next:'Next →',
+ progLine:'Bunches cleared: <b style="color:var(--gold)">{n}/{m}</b> · TECH DEMO<br>Rotate with {rot}, slice with {cut}.',
+ best:'best {t}',tutStep:'TUTORIAL · STEP {a}/{b}',
+ order:'ORDER:',hintOrder:'Slice only the berries of the order (highlighted). Others — −10 penalty',hintOrderLeft:'Order: {n} left — slice the highlighted ones',hintFree:'Order done — slice any ripe berry · run {n}/3',
+ winInfo:'Variety: <b>{name}</b><br>Time {t} · slices {c} · orders {o} · runs {tr} · mistakes {m}',winBreak:'slices {c} · orders {o} · bonus {bn} · runs {tr} · layers {l} · bunch {b} · time +{t} · penalties {pen}',score:'SCORE',
+ ftTriple:'RUN!',ftOrder:'ORDER COMPLETE!',ftNewOrder:'NEW ORDER',ftOrderBurn:'ORDER EXPIRED — new one',ftBonus:'+{n} BONUS!',ftNotOrder:'not in order',ftGoldSlot:'GOLDEN: slot filled',ftGoldFree:'GOLDEN: −{n} extra',hintGoldSlot:'★ Golden filled one slot of the order (+25)',hintGoldFree:'★ Golden: order already done — removed {n} extra berries (+25)',tutOnlyLit:'tutorial: highlighted berries only',tutPressNext:'press “Next”',tutDoStep:'do the step first',ftRaw:'unripe',ftOther:'wrong mark',ftLayer:'LAYER {n} OPEN',ftOver:'overripe',ftRot:'rotted',ftGold:'GOLDEN ×2',ftIce:'FREEZE',ftChain:'wave +{n}',ftCombo:'RUN ×{n}!',ftStress:'STRESS! berries overripen',stress:'STRESS',hintIceDone:'❄ Ice: {n} nearby berries frozen for 2 moves — they will not overripen',toastGold:'<b>★ Golden berry</b> on this layer: slice it — it fills <b>one slot</b> of the order, or removes 3 extra berries if the order is already done (+25).',toastIce:'<b>❄ Ice berry</b> on this layer: slice it — it <b>freezes</b> 6 neighbours for 2 moves, they will not overripen.',ftAutoOff:'AUTO: layer done — continue by hand',nextStep:'Next',
+ feat:['dew','seeds','bubbles'],who:['with dew','with seeds','with bubbles'],
+ tut:['Rotate the bunch: drag with <b>{rot}</b> left or right.','Tilt the bunch: drag with {rot} up or down (or use the ▲ ▼ buttons).',
+  'Look at the <b>ORDER</b> panel at the top: three icons show which berries are needed — mark and state. Matching berries have a golden ring. Drag with <b>{cut}</b> across one of them.',
+  'Slot filled. Slice two more highlighted berries to finish the order. In the tutorial other berries cannot be sliced.',
+  '<b>Order complete</b> (+100) → <b>bonus magnet</b>: up to 5 extra berries vanish by themselves (+5 each). Then extras beyond a multiple of three dissolve and four berries ripen.',
+  '<b>Mistake</b> — slicing a berry that is not in the order: −10 penalty (score never goes below zero) and the berry closes for 5 seconds. A layer can be cleared even at zero points.',
+  '<b>Overripe berries are part of orders too.</b> The ring on the order icon and around a berry: golden — ripe, amber dashed — overripe 1, red — overripe 2 (outside an order they cost −5/−10, then rot −20). Berries needed for the order never spoil — the game guarantees they appear.',
+  '<b>Golden berry</b> (highlighted — rotate the bunch if you cannot see it): fills one slot of the order, or removes 3 extra berries if the order is already done (+25). Slice it.',
+  '<b>Ice berry</b> (highlighted): freezes 6 neighbours for 2 moves — they do not overripen. Slice it.',
+  '<b>After the order — free phase:</b> slice any ripe berry (highlighted). Every three slices make a <b>run</b> +50: extras dissolve, four ripen. The next run within 5 seconds — combo ×2, ×3…',
+  '<b>Layer timer</b> (TIME box). When it hits zero — <b>stress</b>: berries overripen every 7 seconds and there is no layer bonus, but the layer can still be cleared. The timer is paused in the tutorial.',
+  'Now clear the whole layer.','The next layer woke up — with a new order. Clear all three and the bunch is yours. Good luck!'],
+ helpHtml:`<div class="card"><h2>Goal</h2><p>Clear the bunch: three layers of berries. The outer layer is active; inner layers "sleep" (dim) and wake up one by one. Each layer starts with an <b>order</b>, then a free phase.</p></div>
+  <div class="card"><h2>Controls</h2><ul><li><b>Mouse:</b> <b>right</b> button rotates the bunch (left-right) and tilts it (up-down); <b>left</b> button slices.</li>
+  <li><b>Touch screen:</b> <b>two fingers</b> rotate and tilt; <b>one finger</b> slices.</li>
+  <li>One stroke cuts one berry (at least 20 px long). Direction sets the split: vertical, horizontal or diagonal. Speed only affects how hard the halves fly apart.</li>
+  <li>⟲ ⟳ ▲ ▼ buttons and arrow keys ← → ↑ ↓ also rotate and tilt the bunch. ⚡ AUTO slices only the <b>current layer</b>; then you continue by hand. <b>TUTORIAL</b> in the menu is a step-by-step practice on the first bunch.</li></ul></div>
+  <div class="card"><h2>Order</h2><ul><li>The <b>ORDER</b> panel below the score shows three berries: a <b>mark</b> (dew, seeds, bubbles) and a <b>state</b> by ring: golden — ripe, amber dashed — overripe 1, red — overripe 2. Unripe and medium berries are never ordered.</li>
+  <li>Slice <b>only</b> berries of the order — they have a golden ring (a faint ring means the berry will match soon). Slicing anything else — −10 and the berry closes for 5 seconds. The score never goes below zero and a layer can be cleared at zero.</li>
+  <li>All three slots filled — <b>order complete</b> (+100) and the <b>bonus magnet</b> fires: up to 5 extra berries (neighbours of the sliced ones and berries useless for future orders) vanish, +5 each.</li>
+  <li>Berries needed for the order never overripen, and if none exists the game ripens (or overripens) a matching one. On bunch 8 each order has its own <b>timer</b> (10/12/15 s): too slow — the order expires and a new one is issued, no penalty. Bunches 9–10 have several orders per layer.</li></ul></div>
+  <div class="card"><h2>Free phase and score</h2><ul><li>After the order slice any <b>ripe</b> berry. Every three slices make a <b>run</b> (+50 × combo): extra berries (remainder mod 3) dissolve, then <b>4 random</b> berries ripen and the third berry ripens neighbours with the same mark (<b>wave</b>).</li>
+  <li><b>Score:</b> +10 slice, +100 order, +5 per bonus berry, +50 run (× combo), +100 cleared layer, +200 bunch plus spare seconds (out of 600), +25 golden. Penalties: −10 not in order, −15 unripe, −5/−10 overripe, −20 rotted.</li>
+  <li><b>Combo:</b> the next run within 5 s after the previous one gives ×2, ×3…</li></ul></div>
+  <div class="card"><h2>Overripening, time, special berries</h2><ul><li>After every run the ripe berries you didn't slice <b>overripen</b>: amber ring first (−5 when sliced outside an order), then red (−10), then the berry <b>rots</b> (−20). Freshly ripened berries (white halo) skip one step.</li>
+  <li>Each layer has a <b>time limit</b> (3:30 / 2:30 / 1:50 by difficulty). When it runs out — <b>stress</b>: berries overripen every 7 seconds and there is no layer bonus, but the layer can still be cleared.</li>
+  <li><b>Golden</b> berry (one per layer) fills one slot of the order, or removes 3 extra berries after the order; +25.</li>
+  <li><b>Ice</b> berry (layers 2–3, from bunch 4) <b>freezes</b> the 6 nearest berries for 2 moves: they don't overripen.</li>
+  <li>Layer empty — the next one wakes up. Three layers — the bunch is cleared!</li></ul></div>`}
+};
+let LANG='ru';try{const v=localStorage.getItem('vb_lang');if(v==='en'||v==='ru')LANG=v;else if(!/^ru/i.test(navigator.language||''))LANG='en';}catch(e){}
+function T(k,vars){let t=(I18N[LANG]&&I18N[LANG][k])??I18N.ru[k]??k;if(vars)for(const v in vars)t=t.split('{'+v+'}').join(vars[v]);if(typeof t==='string')t=ctl(t);return t;}
+/* подстановка способа управления по устройству: {rot}/{cut} → «двумя пальцами»/«одним пальцем» или «правой кнопкой мыши»/«левой кнопкой мыши» */
+function ctl(s){if(s.indexOf('{rot}')<0&&s.indexOf('{cut}')<0)return s;return s.split('{rot}').join(T(MOBILE?'mRot':'dRot')).split('{cut}').join(T(MOBILE?'mCut':'dCut'));}
+function applyLang(){$('cue').querySelector('.hand').textContent=MOBILE?'✌️':'🖱️';document.documentElement.lang=LANG;document.title=T('title');$('langLbl').textContent=LANG==='ru'?'EN':'RU';
+ document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=T(el.dataset.t);});
+ $('helpBody').innerHTML=T('helpHtml');
+ if(typeof buildGrid==='function')buildGrid();if(typeof updateHUD==='function'&&running)updateHUD();if(TUT&&TUT.on)TUT.show();}
+function setLang(l){LANG=l;try{localStorage.setItem('vb_lang',l);}catch(e){}applyLang();}
+
+/* =============== звук: синтез WebAudio (как в Мат-Бум) =============== */
+let AC=null,master=null,sndOn=true;
+try{sndOn=localStorage.getItem('vb_sound')!=='off';}catch(e){}
+function audio(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain();master.gain.value=sndOn?.5:0;master.connect(AC.destination);} if(AC.state==='suspended')AC.resume(); }
+function tone(f,dur,type,vol,slide,delay){ if(!sndOn||!AC)return; const t=AC.currentTime+(delay||0);
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02); }
+function noise(dur,vol,hp,delay){ if(!sndOn||!AC)return; const n=AC.sampleRate*dur|0,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=hp||800;
+  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(master);s.start(AC.currentTime+(delay||0)); }
+const S={
+ click:()=>tone(950,.05,'square',.07),
+ pop:i=>{tone(520+i*140,.09,'sine',.22,380+i*100);noise(.05,.09,2500)},            // «поп»
+ whoosh:()=>{noise(.16,.09,1500);tone(900,.14,'sine',.05,300)},                      // «фьють» — мимо
+ puf:()=>{tone(170,.25,'sine',.18,70);noise(.18,.1,300)},                            // «пуф» — ошибка
+ triple:(n)=>{const k=Math.pow(1.12,(n||1)-1);[523,659,784,1047].forEach((f,i)=>tone(f*k,.22,'triangle',.16,0,i*.07));noise(.3,.08,2500,.2)}, // восходящий; выше с каждым комбо
+ chain:()=>{[660,880,1100,1320,1540].forEach((f,i)=>tone(f,.12,'triangle',.08,0,i*.05));noise(.25,.06,1800,.1)},           // волна дозревания
+ gold:()=>{[1047,1319,1568,2093].forEach((f,i)=>tone(f,.18,'sine',.12,0,i*.05));noise(.2,.05,4000)},                         // золотая
+ ice:()=>{tone(1800,.3,'sine',.08,900);noise(.35,.08,3500);tone(2400,.15,'triangle',.05,0,.1)},                                // лёд
+ stress:()=>{tone(110,.35,'sawtooth',.07,90);tone(220,.2,'square',.03,0,.05)},                                                  // тревожный пульс
+ vzhuh:()=>{noise(.3,.1,500);tone(260,.3,'sine',.09,1400)},                          // «вжух» — сброс
+ raise:()=>{tone(880,.18,'triangle',.1);tone(1320,.25,'triangle',.09,0,.08)},         // повышение
+ layer:()=>{[392,494,587,784].forEach((f,i)=>tone(f,.5,'triangle',.14,0,i*.04));},
+ fanfare:()=>{[392,392,392,523,659,784].forEach((f,i)=>tone(f,i<3?.12:.4,'sawtooth',.14,0,i*.13));[1047,1319,1568].forEach((f,i)=>tone(f,.5,'triangle',.11,0,.8+i*.1));}
+};
+document.addEventListener('pointerdown',audio,{passive:true});
+function buzz(p){if(!MOBILE)return;try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
+function setSound(on){sndOn=!!on;try{localStorage.setItem('vb_sound',on?'on':'off');}catch(e){} if(master)master.gain.value=on?.5:0;
+  $('btn-sound').classList.toggle('off',!on);}
+
+/* =============== платформа: Яндекс Игры (обвязка из Мат-Бум, офлайн-фолбэк) ===============
+   Локально (file:) и без SDK — гостевой режим, ничего не ломается. На портале: LoadingAPI.ready,
+   GameplayAPI start/stop, пауза по game_api_pause, интерстишл на естественной паузе (после грозди). */
+const PLAT={ysdk:null,player:null,ready:false};let gpWanted=false,gpMarked=false;
+function loadSdk(ms){if(window.YaGames&&window.YaGames.init)return Promise.resolve(window.YaGames);
+ return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='/sdk.js';sc.async=true;
+  const t=setTimeout(()=>rej(new Error('sdk timeout')),ms||6000);
+  sc.onload=()=>{clearTimeout(t);window.YaGames?res(window.YaGames):rej(new Error('no YaGames'));};
+  sc.onerror=()=>{clearTimeout(t);rej(new Error('sdk load failed'));};document.head.appendChild(sc);});}
+function syncGameplay(){const api=PLAT.ysdk&&PLAT.ysdk.features&&PLAT.ysdk.features.GameplayAPI;if(!api)return;
+ const should=gpWanted&&running&&!paused;try{if(should&&!gpMarked){api.start();gpMarked=true;}else if(!should&&gpMarked){api.stop();gpMarked=false;}}catch(e){}}
+function gameReady(){try{PLAT.ysdk&&PLAT.ysdk.features&&PLAT.ysdk.features.LoadingAPI&&PLAT.ysdk.features.LoadingAPI.ready();}catch(e){}}
+async function initPlatform(){
+ try{if(location.protocol==='file:')return;await loadSdk();PLAT.ysdk=await window.YaGames.init();
+  if(PLAT.ysdk.on){PLAT.ysdk.on('game_api_pause',()=>{if(running&&!paused)togglePause(true);});PLAT.ysdk.on('game_api_resume',()=>{});}
+  try{const env=PLAT.ysdk.environment&&PLAT.ysdk.environment.i18n;let saved=null;try{saved=localStorage.getItem('vb_lang');}catch(e){}
+   if(!saved&&env&&env.lang)setLang(/^ru/i.test(env.lang)?'ru':'en');}catch(e){}
+  try{PLAT.player=await PLAT.ysdk.getPlayer({scopes:false});await loadCloud();}catch(e){PLAT.player=null;}
+ }catch(e){PLAT.ysdk=null;}
+ PLAT.ready=true;gameReady();}
+function showInterstitial(){if(!PLAT.ysdk||!PLAT.ysdk.adv)return Promise.resolve(false);
+ const m=master&&master.gain.value;if(master)master.gain.value=0;const back=()=>{if(master)master.gain.value=sndOn?.5:0;};
+ return new Promise(res=>{try{PLAT.ysdk.adv.showFullscreenAdv({callbacks:{onClose:()=>{back();res(true);},onError:()=>{back();res(false);},onOffline:()=>{back();res(false);}}});}catch(e){back();res(false);}});}
+
+/* ---------- прогресс: localStorage + облако Яндекса (cloudSave/cloudLoad из Мат-Бума) ---------- */
+let PROG={done:{}};
+try{const v=JSON.parse(localStorage.getItem('vb_prog')||'null');if(v&&v.done)PROG=v;}catch(e){}
+function saveProg(){try{localStorage.setItem('vb_prog',JSON.stringify(PROG));}catch(e){}
+ if(PLAT.player){try{PLAT.player.setData({vineboom:PROG},true).catch(()=>{});}catch(e){}}}
+/* очки за гроздь (v0.5): накопленные за игру очки (см. PTS). Для Яндекс-лидерборда — сумма лучших по всем гроздям */
+function lvScore(rec){if(typeof rec.score==='number')return rec.score;return Math.max(100,500+Math.max(0,600-rec.time)-rec.mist*10);} /* старые записи (до 0.5) — прежняя формула */
+function totalScore(){let t=0;for(const k in PROG.done)if(!PROG.done[k].auto)t+=lvScore(PROG.done[k]);return t;}
+async function lbSubmit(score){if(!PLAT.ysdk||!PLAT.ysdk.getLeaderboards)return;try{const lb=await PLAT.ysdk.getLeaderboards();await lb.setLeaderboardScore('main',score);}catch(e){}}
+async function lbTop(n){if(!PLAT.ysdk||!PLAT.ysdk.getLeaderboards)return null;try{const lb=await PLAT.ysdk.getLeaderboards();
+ const r=await lb.getLeaderboardEntries('main',{quantityTop:n||5,includeUser:true,quantityAround:2});
+ return r.entries.map(e=>({name:(e.player&&e.player.publicName)||'?',score:e.score}));}catch(e){return null;}}
+async function loadCloud(){if(!PLAT.player)return;try{const d=await PLAT.player.getData();const c=d&&d.vineboom;
+ if(c&&c.done){for(const k in c.done){const a=PROG.done[k],b=c.done[k];if(!a||b.time<a.time)PROG.done[k]=b;}saveProg();buildGrid();}}catch(e){}}
+function recordWin(n,rec){const old=PROG.done[n];
+ /* честный рекорд всегда важнее авто-прохождения; среди честных — больше очков */
+ if(!old||(old.auto&&!rec.auto)||(old.auto===rec.auto&&lvScore(rec)>lvScore(old)))PROG.done[n]=rec;
+ saveProg();buildGrid();if(!rec.auto)lbSubmit(totalScore());}
+function nextLevelIdx(){for(let i=0;i<LEVELS.length;i++)if(!PROG.done[LEVELS[i].n])return i;return 0;}
+
+/* =============== матрицы (column-major, как в Мат-Бум) =============== */
+function mI(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
+function mMul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s;}return o;}
+function mPersp(fov,asp,n,f){const t=1/Math.tan(fov/2);return new Float32Array([t/asp,0,0,0,0,t,0,0,0,0,(f+n)/(n-f),-1,0,0,2*f*n/(n-f),0])}
+function mRotX(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([1,0,0,0,0,c,s,0,0,-s,c,0,0,0,0,1])}
+function mRotY(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1])}
+function mRotZ(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1])}
+function mTrans(x,y,z){const m=mI();m[12]=x;m[13]=y;m[14]=z;return m}
+function mScale(x,y,z){const m=mI();m[0]=x;m[5]=y;m[10]=z;return m}
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v),easeOut=p=>1-Math.pow(1-p,3),smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+function mRotAxis(ax,a){const [x,y,z]=ax,c=Math.cos(a),s=Math.sin(a),t=1-c;
+  return new Float32Array([t*x*x+c,t*x*y+s*z,t*x*z-s*y,0, t*x*y-s*z,t*y*y+c,t*y*z+s*x,0, t*x*z+s*y,t*y*z-s*x,t*z*z+c,0, 0,0,0,1]);}
+function m3(m){return new Float32Array([m[0],m[1],m[2],m[4],m[5],m[6],m[8],m[9],m[10]])}
+function m3T(m){return [m[0]*0+m[0],m[4],m[8], m[1],m[5],m[9], m[2],m[6],m[10]]} /* транспонированная 3x3 (строки) */
+function rnd(n){return Math.random()*n} function pick(a){return a[Math.random()*a.length|0]}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a}
+
+/* =============== WebGL =============== */
+const cv=$('gl'),fx=$('fx'),fctx=fx.getContext('2d'),stage=$('stage');
+const gl=cv.getContext('webgl',{alpha:true,antialias:!MOBILE,premultipliedAlpha:false})||cv.getContext('experimental-webgl');
+if(!gl){ /* нет WebGL — честное сообщение вместо пустого экрана */
+ const ru=(navigator.language||'ru').slice(0,2)==='ru';
+ document.body.innerHTML='<div style="display:flex;height:100%;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:inherit;color:#e9e4d6">'
+  +'<div><div style="font-size:28px;font-weight:900;letter-spacing:3px;color:#e8c56a">'+(ru?'ВИНОГРАД-БУМ!':'VINE-BOOM!')+'</div>'
+  +'<p style="margin-top:14px;line-height:1.5;color:#cfe0d6">'+(ru?'Для игры нужен WebGL. Включите аппаратное ускорение в браузере или откройте страницу в другом браузере (Chrome, Safari, Яндекс Браузер).':'This game needs WebGL. Enable hardware acceleration or open the page in another browser (Chrome, Safari).')+'</p></div></div>';
+ throw new Error('WebGL unavailable');}
+const VS=`
+precision mediump float;
+attribute vec3 aPos;attribute vec3 aNrm;
+uniform mat4 uP;uniform mat4 uMV;uniform mat3 uNM;uniform vec3 uScale;uniform float uShape;
+varying vec3 vN;varying vec3 vPv;varying vec3 vPo;
+/* формы ягод: 0 — овал, 1 — сердечко (ямка сверху, носик снизу), 2 — пузатая звёздочка (5 рёбер) */
+vec3 deform(vec3 p){
+ if(uShape<.5)return p;
+ /* v0.7: плоские формы в плоскости xy (лицом наружу), толщина по z уменьшена — читаются как сердечко и звёздочка */
+ float a=atan(p.y,p.x);
+ if(uShape<1.5){ /* сердечко: полярный радиус из неявной кривой (x²+y²−1)³−x²y³=0 (Ньютон) */
+  float ca=cos(a),sa=sin(a);float k=ca*ca*sa*sa*sa;float r=1.1;
+  for(int i=0;i<5;i++){float r2=r*r-1.;float g=r2*r2*r2-k*r*r*r*r*r;float dg=6.*r*r2*r2-5.*k*r*r*r*r;r-=g/max(dg,1e-3);}
+  r=clamp(r,.45,1.25)/1.2;vec3 q=vec3(p.xy*r,p.z*.62);return q*1.08;}
+ /* звезда: настоящий пятиконечный контур с прямыми рёбрами (лучи наружу R=1, впадины ri=.52), чуть скруглённый */
+ float u=mod(a-1.5708,1.25664);if(u>.62832)u=1.25664-u;const float ri=.52;float r=ri*.58779/(ri*sin(.62832-u)+sin(u));
+ r=mix(r,.76,.12);vec3 q=vec3(p.xy*r,p.z*.5);return q*1.12;}
+void main(){
+ vec3 p=deform(aPos);vec3 n=aNrm;
+ if(uShape>.5){ /* нормаль деформированной поверхности — конечными разностями */
+  vec3 up=abs(aNrm.y)>.9?vec3(1.,0.,0.):vec3(0.,1.,0.);vec3 t1=normalize(cross(aNrm,up)),t2=cross(aNrm,t1);
+  vec3 d1=deform(normalize(aPos+t1*.02))-p,d2=deform(normalize(aPos+t2*.02))-p;n=normalize(cross(d1,d2));if(dot(n,aNrm)<0.)n=-n;}
+ vPo=p;vec4 pv=uMV*vec4(p*uScale,1.);vPv=pv.xyz;vN=uNM*normalize(n/uScale);gl_Position=uP*pv;}`;
+const FS=`
+precision mediump float;
+varying vec3 vN;varying vec3 vPv;varying vec3 vPo;
+uniform vec3 uCol;uniform vec3 uFlesh;uniform float uRipe;uniform float uFeat;uniform float uMode;
+uniform float uFlash;uniform float uAlpha;uniform vec4 uClip;uniform float uTime;uniform float uSeed;
+uniform vec3 uCenter;uniform mat3 uNM;uniform vec3 uScale;uniform vec3 uExtra; /* x: спец (1 золотая, 2 ледяная), y: перезрелость 0/1/2, z: заморожена */
+float hash(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
+void main(){
+ if(uClip.w!=0.&&dot(vPo,uClip.xyz)*uClip.w<0.)discard;
+ vec3 L=normalize(vec3(.4,.7,.65));
+ vec3 n=normalize(vN);vec3 V=normalize(-vPv);
+ if(!gl_FrontFacing){ /* внутренняя сторона половинки — мякоть */
+  n=-n;float d=max(dot(n,L),0.)*.45+.55;
+  vec3 c=uFlesh*d;float cen=length(vPo.xy);
+  c=mix(c,uCol,.35*smoothstep(.2,1.,cen));
+  gl_FragColor=vec4(c,uAlpha);return;}
+ float diff=max(dot(n,L),0.);
+ float cen=max(dot(n,V),0.);
+ float fr=pow(1.-cen,2.5);
+ vec3 base=uCol;float lum=dot(base,vec3(.3,.59,.11));
+ if(uRipe<.5){base=mix(base,vec3(lum),.35);base=mix(base,vec3(.72,.80,.55),.42)*.92;}  /* сырая: бледная, тусклая, зеленоватая */
+ else if(uRipe<1.5){base=mix(base,vec3(lum),.08)*.9;}                                 /* средняя: обычная, чуть приглушённая */
+ else base*=1.12;                                                                     /* спелая: налитая, яркая */
+ vec3 col=base*(.42+.68*diff);
+ col+=base*fr*(uRipe>1.5?.6:.25);                                                     /* просвет по краю (полупрозрачность) */
+ if(uRipe>1.5)col*=1.-.14*cen*cen;                                                    /* спелая: центр чуть глубже — ягода читается объёмной и «налитой» */
+ col+=vec3(1.,.96,.85)*pow(max(dot(reflect(-L,n),V),0.),44.)*(uRipe>1.5?.75:.35);     /* блик */
+ if(uRipe<1.5)col=mix(col,col*.85+vec3(.10),.35*cen*cen);                             /* мутная внутренность */
+ if(uRipe>1.5&&uFeat>.5){                                                             /* признак виден только у спелых */
+  vec2 rel=(vPv.xy-uCenter.xy)/uScale.x;
+  if(uFeat<1.5){ /* капельки росы: мерцающие светлые точки под кожицей */
+   vec3 p=vPo*3.2+uSeed;vec3 c=floor(p);vec3 f=fract(p);vec3 r=vec3(hash(c),hash(c+7.1),hash(c+13.7));
+   float d=length(f-(.3+.4*r));float tw=.5+.5*sin(uTime*3.+r.x*6.28);
+   float k=smoothstep(.26,.13,d)*(.35+.65*tw)*(.3+.7*cen);
+   col=mix(col,vec3(.95,1.,.98),k*.7);
+  }else if(uFeat<2.5){ /* косточки: 1–2 тёмных продолговатых пятна просвечивают */
+   for(int i=0;i<2;i++){vec3 so=(i==0)?vec3(.16,.12,.08):vec3(-.13,-.15,-.06);
+    vec3 sv=uNM*(so*uScale)/uScale.x;vec2 q=rel-sv.xy;q.x*=1.9;float d=length(q);
+    float k=smoothstep(.2,.1,d)*cen*cen*smoothstep(-.7,.1,sv.z);   /* у края ягоды косточки тают — без «обводок» на стыках */
+    col=mix(col,vec3(.22,.12,.08),k*.6);}
+  }else{ /* пузырьки: медленно поднимаются внутри */
+   for(int i=0;i<5;i++){float fi=float(i);float ph=fract(uTime*.11+fi*.2+uSeed*.1);
+    vec3 bo=vec3(sin(fi*1.7+uSeed)*.3,ph*1.3-.65,cos(fi*2.3+uSeed)*.3);
+    vec3 bv=uNM*(bo*uScale)/uScale.x;vec2 q=rel-bv.xy;float d=length(q);
+    float vis=smoothstep(0.,.12,ph)*smoothstep(1.,.86,ph)*(.4+.6*cen);
+    float ring=(smoothstep(.13,.085,d)-smoothstep(.08,.045,d)*.8)*vis;
+    col=mix(col,vec3(.9,.97,1.),ring*.9);}
+  }
+ }
+ if(uMode>.5&&uMode<1.5){float l=dot(col,vec3(.3,.59,.11));col=mix(col,vec3(l),.55)*.5;}            /* спит */
+ if(uMode>1.5&&uMode<2.5){float l=dot(col,vec3(.3,.59,.11));col=mix(vec3(l)*.3,vec3(.3,.26,.36),.35)*(.9+.1*sin(uTime*5.));} /* закрыта */
+ if(uRipe>1.5&&uMode<.5)col*=1.05+.06*sin(uTime*2.+uSeed);                                         /* лёгкое свечение спелой */
+ /* v0.6: перезрелость — янтарная, потом бурая и тусклая, с пятнами */
+ if(uExtra.y>.5){float sp=smoothstep(.55,.75,hash(floor(vPo*2.6+uSeed)));
+  if(uExtra.y<1.5)col=mix(col,col*vec3(1.05,.78,.45),.45+.25*sp);
+  else col=mix(col,vec3(.36,.22,.12),.5+.3*sp)*.9;}
+ if(uExtra.z>.5){col=mix(col,vec3(.78,.9,1.),.45);col+=vec3(.5,.7,.9)*fr*.6;}                      /* заморожена: ледяной налёт */
+ if(uExtra.x>.5&&uExtra.x<1.5){float tw=.5+.5*sin(uTime*4.+hash(floor(vPo*4.+uSeed))*6.28);        /* золотая: металлический блеск, искры */
+  col=mix(col,vec3(1.,.9,.5),.35*tw*cen);col+=vec3(1.,.95,.7)*pow(max(dot(reflect(-L,n),V),0.),18.)*.6;}
+ if(uExtra.x>1.5){col=mix(col,vec3(.85,.95,1.),.35+.4*fr);col+=vec3(.6,.85,1.)*pow(max(dot(reflect(-L,n),V),0.),30.)*.8;} /* ледяная: прозрачный панцирь */
+ if(uMode>2.5){float l=dot(col,vec3(.3,.59,.11));col=mix(col,vec3(.25,.16,.1),.6)*.6;}               /* гниёт */
+ col=mix(col,vec3(1.,1.,.9),uFlash);
+ gl_FragColor=vec4(col,uAlpha);
+}`;
+function sh(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(s));return s;}
+let prog=null,U={},SPH=null,glLost=false;
+/* вся инициализация GL — в одной функции: вызывается при старте и после восстановления контекста (как в Мат-Бум 2) */
+function initGL(){
+ prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+ if(!gl.getProgramParameter(prog,gl.LINK_STATUS))console.error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
+ U={};['uP','uMV','uNM','uScale','uCol','uFlesh','uRipe','uFeat','uMode','uFlash','uAlpha','uClip','uTime','uSeed','uCenter','uShape','uExtra'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+ /* сфера (UV), лёгкая: 20x13 на телефоне, 26x17 на десктопе */
+ const P=[],N=[],I=[],Wn=MOBILE?20:26,Hn=MOBILE?13:17;
+ for(let j=0;j<=Hn;j++){const v=j/Hn,th=v*Math.PI;for(let i=0;i<=Wn;i++){const u=i/Wn,ph=u*Math.PI*2;
+  const x=Math.sin(th)*Math.cos(ph),y=Math.cos(th),z=Math.sin(th)*Math.sin(ph);P.push(x,y,z);N.push(x,y,z);}}
+ for(let j=0;j<Hn;j++)for(let i=0;i<Wn;i++){const a=j*(Wn+1)+i,b=a+Wn+1;I.push(a,a+1,b,a+1,b+1,b);  /* CCW снаружи — иначе CULL_FACE оставляет дальнюю полусферу и глубина врёт */}
+ const buf=(d,t)=>{const b=gl.createBuffer();gl.bindBuffer(t,b);gl.bufferData(t,d,gl.STATIC_DRAW);return b;};
+ SPH={p:buf(new Float32Array(P),gl.ARRAY_BUFFER),n:buf(new Float32Array(N),gl.ARRAY_BUFFER),i:buf(new Uint16Array(I),gl.ELEMENT_ARRAY_BUFFER),cnt:I.length};
+ SPH.aPos=gl.getAttribLocation(prog,'aPos');SPH.aNrm=gl.getAttribLocation(prog,'aNrm');bindSphere();
+ gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);
+ initSky();
+}
+/* атрибуты сферы (вызывается при инициализации и после рисования фона, у которого свой буфер) */
+function bindSphere(){gl.bindBuffer(gl.ARRAY_BUFFER,SPH.p);gl.enableVertexAttribArray(SPH.aPos);gl.vertexAttribPointer(SPH.aPos,3,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ARRAY_BUFFER,SPH.n);gl.enableVertexAttribArray(SPH.aNrm);gl.vertexAttribPointer(SPH.aNrm,3,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,SPH.i);}
+/* =============== фон v0.5: средиземноморская панорама (equirect), вращается вместе с гроздью =============== 
+   Приём из Мат-Бум 3 «Побег из сферы» (0.5.9+): полноэкранный квад, на каждый пиксель — направление луча, повёрнутое
+   ротацией модели, одна выборка из равнопромежуточной текстуры. Текстура рисуется процедурно на Canvas2D при старте
+   (и при смене темы): небо, солнце, лёгкие облака, далёкие острова и скалы, море с бликами. Без внешних файлов. */
+const SKYVS=`attribute vec2 aP;varying vec2 vUv;void main(){vUv=aP;gl_Position=vec4(aP,0.,1.);}`;
+const SKYFS=`precision mediump float;varying vec2 vUv;uniform float uAsp,uTh,uDim;uniform mat3 uRot;uniform sampler2D uSky;
+void main(){vec3 rd=normalize(vec3(vUv.x*uAsp*uTh,vUv.y*uTh,-1.));vec3 D=uRot*rd;
+ float u=atan(D.z,D.x)*0.15915494+0.5;float v=asin(clamp(D.y,-1.,1.))*0.31830989+0.5;
+ gl_FragColor=vec4(texture2D(uSky,vec2(u,1.-v)).rgb*uDim,1.);}`;
+let SKY=null;
+function initSky(){
+ const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,SKYVS));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,SKYFS));gl.linkProgram(p);
+ if(!gl.getProgramParameter(p,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(p));SKY=null;return;}
+ const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+ const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ SKY={prog:p,aP:gl.getAttribLocation(p,'aP'),u:{},buf,tex,ready:false,theme:null};
+ ['uAsp','uTh','uDim','uRot','uSky'].forEach(n=>SKY.u[n]=gl.getUniformLocation(p,n)); /* текстура загружается лениво в drawSky (THEME объявлена позже) */
+}
+/* v0.7: на телефоне 1024×512, на десктопе 2048×1024; готовая картинка кэшируется в localStorage (JPEG data-URL), чтобы не рисовать при каждом старте */
+const CACHE_V='v08';
+function cacheGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function cachePut(k,v){try{if(v.length<1.4e6)localStorage.setItem(k,v);}catch(e){}}
+function uploadSky(){if(!SKY||SKY.busy)return;SKY.busy=true;const theme=THEME;
+ const put=src=>{gl.bindTexture(gl.TEXTURE_2D,SKY.tex);try{gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,src);SKY.ready=true;SKY.theme=theme;}catch(e){console.warn('sky',e);SKY.ready=false;}SKY.busy=false;};
+ const key='vb_sky_'+CACHE_V+'_'+theme+'_'+(MOBILE?'m':'d'),cached=cacheGet(key);
+ if(cached){const im=new Image();im.onload=()=>put(im);im.onerror=()=>{SKY.busy=false;try{localStorage.removeItem(key);}catch(e){}};im.src=cached;return;}
+ const c=paintSky(theme);put(c);try{cachePut(key,c.toDataURL('image/jpeg',.86));}catch(e){}}
+/* детерминированный ГСЧ — острова на одних местах в обеих темах */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function paintSky(theme){
+ const Wt=MOBILE?1024:2048,Ht=Wt/2,HOR=Ht/2,c=document.createElement('canvas');c.width=Wt;c.height=Ht;const x=c.getContext('2d');
+ const day=theme==='light';
+ const PAL=day?{
+  sky:['#2e6cae','#5e9bd3','#a9cde4','#dfe9ea'],sunY:HOR-Ht*.115,sun:'#fff8e0',glow:'rgba(255,244,205,',glowA:.55,
+  sea:['#a8cfdd','#4e97c6','#2d6fa3','#1d4f7d'],wave:'255,255,255',cloud:'255,255,255',cloudA:.36,
+  far:'#9db7c9',near:'#5f7183',rock:'#4a5a6b',green:'#4f6b4e',haze:'rgba(225,235,238,',hazeA:.22,veil:'rgba(214,226,232,.10)'
+ }:{
+  sky:['#1b2a55','#3f5590','#8d7da6','#f0b98c'],sunY:HOR-Ht*.05,sun:'#ffe2b0',glow:'rgba(255,170,110,',glowA:.5,
+  sea:['#8c7f9b','#4a5f8e','#2a3c67','#16213f'],wave:'255,215,180',cloud:'255,205,190',cloudA:.28,
+  far:'#6f6a8e','near':'#3f3f5e',rock:'#2e3047',green:'#2f3d44',haze:'rgba(240,190,160,',hazeA:.18,veil:'rgba(40,36,70,.14)'
+ };
+ const R=mulberry(20240517);
+ /* небо */
+ let gr=x.createLinearGradient(0,0,0,HOR);gr.addColorStop(0,PAL.sky[0]);gr.addColorStop(.45,PAL.sky[1]);gr.addColorStop(.82,PAL.sky[2]);gr.addColorStop(1,PAL.sky[3]);
+ x.fillStyle=gr;x.fillRect(0,0,Wt,HOR+2);
+ /* море */
+ gr=x.createLinearGradient(0,HOR,0,Ht);gr.addColorStop(0,PAL.sea[0]);gr.addColorStop(.12,PAL.sea[1]);gr.addColorStop(.45,PAL.sea[2]);gr.addColorStop(1,PAL.sea[3]);
+ x.fillStyle=gr;x.fillRect(0,HOR,Wt,Ht-HOR);
+ /* солнце: широкое мягкое сияние + диск; дорожка на воде */
+ const sunX=Wt*.30,sunY=PAL.sunY;
+ const wrapX=(fn)=>{for(const o of [-Wt,0,Wt]){x.save();x.translate(o,0);fn();x.restore();}};
+ wrapX(()=>{let g=x.createRadialGradient(sunX,sunY,0,sunX,sunY,Ht*.42);g.addColorStop(0,PAL.glow+PAL.glowA+')');g.addColorStop(.35,PAL.glow+(PAL.glowA*.35)+')');g.addColorStop(1,PAL.glow+'0)');
+  x.fillStyle=g;x.fillRect(sunX-Ht*.45,0,Ht*.9,HOR+1);
+  g=x.createRadialGradient(sunX,sunY,0,sunX,sunY,Ht*.075);g.addColorStop(0,PAL.sun);g.addColorStop(.42,PAL.sun);g.addColorStop(.5,PAL.glow+'.8)');g.addColorStop(1,PAL.glow+'0)');
+  x.fillStyle=g;x.beginPath();x.arc(sunX,sunY,Ht*.075,0,7);x.fill();
+  /* дорожка */
+  for(let i=0;i<260;i++){const t=R();const yy=HOR+4+t*t*Ht*.30;const spread=30+t*220;const xx=sunX+(R()*2-1)*spread;const w=3+R()*12*(0.4+t),h=.8+R()*1.6*(0.5+t);
+   x.fillStyle='rgba('+PAL.wave+','+(0.08+0.22*(1-t)*R())+')';x.beginPath();x.ellipse(xx,yy,w,h,0,0,7);x.fill();}});
+ /* облака: мягкие вытянутые пятна из радиальных градиентов */
+ for(let i=0;i<9;i++){const cx=R()*Wt,cy=HOR-Ht*(.06+R()*.16),len=120+R()*260,n=4+(R()*4|0);
+  wrapX(()=>{for(let k=0;k<n;k++){const px=cx+(k/(n-1)-.5)*len,py=cy+(R()-.5)*18,r=28+R()*34;
+   const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,'rgba('+PAL.cloud+','+PAL.cloudA+')');g.addColorStop(.55,'rgba('+PAL.cloud+','+(PAL.cloudA*.45)+')');g.addColorStop(1,'rgba('+PAL.cloud+',0)');
+   x.fillStyle=g;x.beginPath();x.ellipse(px,py,r*1.6,r*.75,0,0,7);x.fill();}});}
+ /* острова и скалы: дальние — бледные и низкие, ближние — контрастнее, с «кипарисами» и белыми домиками */
+ const isl=[[.05,.95,520],[.17,.55,300],[.44,.35,220],[.58,.8,420],[.72,.25,170],[.86,.65,330],[.93,.45,240],[.33,.2,150]];
+ const mix=(a,b,t)=>{const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);const ch=s=>Math.round(((pa>>s)&255)*(1-t)+((pb>>s)&255)*t);return 'rgb('+ch(16)+','+ch(8)+','+ch(0)+')';};
+ isl.sort((a,b)=>a[1]-b[1]); /* сперва дальние */
+ for(const [ux,near,wd] of isl){const cx=ux*Wt,hgt=(10+near*52)*(0.7+R()*.6);
+  const col=mix(PAL.far,PAL.near,near),dark=mix(PAL.far,PAL.rock,near),veg=mix(PAL.far,PAL.green,near*.9);
+  const seg=14+(R()*8|0),prof=[];let ph=R()*6,ph2=R()*6;
+  for(let i=0;i<=seg;i++){const t=i/seg;const env=Math.sin(t*Math.PI);const bump=.55+.3*Math.sin(t*9+ph)+.15*Math.sin(t*23+ph2);prof.push([cx-wd/2+t*wd,HOR+2-hgt*Math.max(0,env*bump+ (i===0||i===seg?0:0))]);}
+  wrapX(()=>{x.beginPath();x.moveTo(prof[0][0],HOR+3);prof.forEach(p=>x.lineTo(p[0],p[1]));x.lineTo(prof[seg][0],HOR+3);x.closePath();x.fillStyle=col;x.fill();
+   /* тёмный скалистый бок справа от солнца */
+   x.save();x.clip();x.fillStyle=dark;x.globalAlpha=.35*near;x.fillRect(cx,HOR-hgt-2,wd/2,hgt+6);x.globalAlpha=1;x.restore();
+   if(near>.5){ /* зелень на вершинах и кипарисы */
+    x.fillStyle=veg;x.globalAlpha=.5;for(let i=2;i<seg-1;i+=2){const p=prof[i];x.beginPath();x.ellipse(p[0],p[1]+4,wd/seg*.9,4+near*4,0,0,7);x.fill();}x.globalAlpha=1;
+    for(let i=0;i<6*near;i++){const p=prof[2+(R()*(seg-4)|0)];x.fillStyle=dark;x.fillRect(p[0]+(R()-.5)*10,p[1]-6-R()*6,2,8+R()*6);}
+    for(let i=0;i<3*near;i++){const p=prof[3+(R()*(seg-6)|0)];x.fillStyle=day?'#f4f1e6':'#e8d2b8';x.fillRect(p[0]+(R()-.5)*14,p[1]+2+R()*5,4,3);}
+   }
+   /* отражение в воде */
+   x.save();x.globalAlpha=.16;x.translate(0,HOR*2+4);x.scale(1,-.45);x.beginPath();x.moveTo(prof[0][0],HOR);prof.forEach(p=>x.lineTo(p[0],p[1]));x.lineTo(prof[seg][0],HOR);x.closePath();x.fillStyle=col;x.fill();x.restore();});
+ }
+ /* рябь по всему морю */
+ for(let i=0;i<700;i++){const t=R();const yy=HOR+2+Math.pow(t,1.7)*(Ht-HOR-10);const xx=R()*Wt;const w=3+R()*(10+50*t),h=.7+R()*1.3*(0.4+t);
+  x.fillStyle='rgba('+PAL.wave+','+(0.03+0.09*R())+')';x.beginPath();x.ellipse(xx,yy,w,h,0,0,7);x.fill();}
+ /* дымка у горизонта + общая «отстранённость» */
+ gr=x.createLinearGradient(0,HOR-110,0,HOR+90);gr.addColorStop(0,PAL.haze+'0)');gr.addColorStop(.55,PAL.haze+PAL.hazeA+')');gr.addColorStop(1,PAL.haze+'0)');
+ x.fillStyle=gr;x.fillRect(0,HOR-110,Wt,200);
+ x.fillStyle=PAL.veil;x.fillRect(0,0,Wt,Ht);
+ return c;
+}
+/* ---------- статичная сцена для экранов: берег, скалы с кипарисами, деревушка, лодки, виноградная лоза по краям ---------- */
+let SCENE={theme:null,url:null};
+function paintScene(theme){
+ const Wt=MOBILE?720:1080,Ht=Wt*1.25|0,HOR=Ht*.46,c=document.createElement('canvas');c.width=Wt;c.height=Ht;const x=c.getContext('2d');
+ const day=theme==='light';const R=mulberry(777);const K=Wt/1080; /* масштаб деталей */
+ const P=day?{sky:['#2a66ad','#5c9bd4','#b9d6e6','#e9eeea'],sun:'#fff7dc',glow:'255,243,200',sunY:HOR-Ht*.10,
+   sea:['#9fc9db','#4a95c7','#2b6ea5','#1d4d7c'],wave:'255,255,255',far:'#a3b8c8',mid:'#6a7d8e',rock:'#6b5a4a',rock2:'#8a7560',veg:'#3f6b45',veg2:'#5a8a4e',
+   house:'#f6f1e4',roof:'#c8673f',cyp:'#2d4a33',leaf:'#4a7a3c',leaf2:'#6c9a4c',grape:'#5f9a4a',cloud:'255,255,255'}
+  :{sky:['#141f44','#3a4f8e','#9a7aa0','#f2b587'],sun:'#ffdfae',glow:'255,170,110',sunY:HOR-Ht*.045,
+   sea:['#8d7c93','#4d5f8e','#2c3c66','#17213f'],wave:'255,215,180',far:'#6f6688',mid:'#43415f',rock:'#2f2a3c',rock2:'#3f3648',veg:'#20302c',veg2:'#2b4036',
+   house:'#e9d7bf',roof:'#8a4a3a',cyp:'#161e22',leaf:'#243a2a',leaf2:'#2f4a33',grape:'#3e3458',cloud:'255,200,185'};
+ let g=x.createLinearGradient(0,0,0,HOR);g.addColorStop(0,P.sky[0]);g.addColorStop(.5,P.sky[1]);g.addColorStop(.85,P.sky[2]);g.addColorStop(1,P.sky[3]);x.fillStyle=g;x.fillRect(0,0,Wt,HOR+1);
+ g=x.createLinearGradient(0,HOR,0,Ht);g.addColorStop(0,P.sea[0]);g.addColorStop(.1,P.sea[1]);g.addColorStop(.5,P.sea[2]);g.addColorStop(1,P.sea[3]);x.fillStyle=g;x.fillRect(0,HOR,Wt,Ht-HOR);
+ /* солнце и дорожка */
+ const sx=Wt*.64,sy=P.sunY;
+ g=x.createRadialGradient(sx,sy,0,sx,sy,Ht*.36);g.addColorStop(0,'rgba('+P.glow+',.55)');g.addColorStop(.4,'rgba('+P.glow+',.18)');g.addColorStop(1,'rgba('+P.glow+',0)');x.fillStyle=g;x.fillRect(0,0,Wt,HOR+1);
+ g=x.createRadialGradient(sx,sy,0,sx,sy,Ht*.06);g.addColorStop(0,P.sun);g.addColorStop(.45,P.sun);g.addColorStop(.55,'rgba('+P.glow+',.8)');g.addColorStop(1,'rgba('+P.glow+',0)');x.fillStyle=g;x.beginPath();x.arc(sx,sy,Ht*.06,0,7);x.fill();
+ for(let i=0;i<420;i++){const t=R();const yy=HOR+3+t*t*Ht*.28,xx=sx+(R()*2-1)*(26+t*260);x.fillStyle='rgba('+P.wave+','+(0.08+0.26*(1-t)*R())+')';x.beginPath();x.ellipse(xx,yy,3+R()*12*(0.4+t),.8+R()*1.8*(0.5+t),0,0,7);x.fill();}
+ /* облака */
+ for(let i=0;i<7;i++){const cx=R()*Wt,cy=HOR-Ht*(.08+R()*.2),len=140+R()*300,n=5+(R()*4|0);
+  for(let k=0;k<n;k++){const px=cx+(k/(n-1)-.5)*len,py=cy+(R()-.5)*20,r=30+R()*40;g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,'rgba('+P.cloud+',.42)');g.addColorStop(.55,'rgba('+P.cloud+',.18)');g.addColorStop(1,'rgba('+P.cloud+',0)');x.fillStyle=g;x.beginPath();x.ellipse(px,py,r*1.7,r*.7,0,0,7);x.fill();}}
+ /* дальние острова */
+ /* острова: у каждого свой профиль (kind: 0 — пологий длинный, 1 — скалистый с пиком, 2 — двугорбый с деревушкой, 3 — одинокая скала с маяком) */
+ const island=(cx,wd,hg,col,kind)=>{const seg=22,pr=[];const ph=R()*6,ph2=R()*6;
+  for(let i=0;i<=seg;i++){const t=i/seg;let env=Math.sin(t*Math.PI),b;
+   if(kind===0)b=.5+.15*Math.sin(t*6+ph)+.08*Math.sin(t*19+ph2),env=Math.pow(env,.6);
+   else if(kind===1)b=.35+.65*Math.exp(-Math.pow((t-.38)*4.5,2))+.12*Math.sin(t*15+ph2);
+   else if(kind===2)b=.45+.35*Math.abs(Math.sin(t*Math.PI*2+.3))+.1*Math.sin(t*23+ph);
+   else b=.3+.7*Math.exp(-Math.pow((t-.5)*6,2)),env=1;
+   pr.push([cx-wd/2+t*wd,HOR+2-hg*env*b]);}
+  const withTown=kind===2;
+  x.beginPath();x.moveTo(pr[0][0],HOR+3);pr.forEach(p=>x.lineTo(p[0],p[1]));x.lineTo(pr[seg][0],HOR+3);x.closePath();x.fillStyle=col;x.fill();
+  x.save();x.globalAlpha=.18;x.translate(0,HOR*2+4);x.scale(1,-.4);x.beginPath();x.moveTo(pr[0][0],HOR);pr.forEach(p=>x.lineTo(p[0],p[1]));x.lineTo(pr[seg][0],HOR);x.closePath();x.fill();x.restore();
+  if(withTown)for(let i=0;i<9;i++){const p=pr[4+(R()*(seg-8)|0)];x.fillStyle=P.house;x.fillRect(p[0]+(R()-.5)*20,p[1]+3+R()*8,5,4);}
+  return pr;};
+ island(Wt*.17,520*K,30*K,P.far,0);island(Wt*.47,240*K,46*K,P.far,1);island(Wt*.84,400*K,42*K,P.mid,2);island(Wt*.66,90*K,34*K,P.mid,3);
+ {const lx=Wt*.66,ly=HOR+2-34*K*.9;x.fillStyle=P.house;x.fillRect(lx-3*K,ly-22*K,6*K,22*K);x.fillStyle=P.roof;x.fillRect(lx-4*K,ly-25*K,8*K,4*K);} /* маяк */
+ /* парусники */
+ for(const [bx,by,sc] of [[Wt*.40,HOR+Ht*.05,1],[Wt*.55,HOR+Ht*.02,.6],[Wt*.30,HOR+Ht*.09,1.3]]){x.fillStyle=P.house;x.beginPath();x.moveTo(bx,by-26*sc);x.lineTo(bx+12*sc,by);x.lineTo(bx,by);x.closePath();x.fill();
+  x.beginPath();x.moveTo(bx-2*sc,by-20*sc);x.lineTo(bx-10*sc,by);x.lineTo(bx-2*sc,by);x.closePath();x.fill();x.fillStyle=P.rock;x.fillRect(bx-12*sc,by,26*sc,3*sc);}
+ /* рябь */
+ for(let i=0;i<900;i++){const t=R();const yy=HOR+2+Math.pow(t,1.6)*(Ht-HOR-10);x.fillStyle='rgba('+P.wave+','+(0.03+0.09*R())+')';x.beginPath();x.ellipse(R()*Wt,yy,3+R()*(8+40*t),.7+R()*1.3*(0.4+t),0,0,7);x.fill();}
+ /* берег слева: скала уступами, домики, кипарисы и пинии */
+ const cliff=[[0,HOR-Ht*.02],[Wt*.05,HOR-Ht*.06],[Wt*.11,HOR-Ht*.05],[Wt*.16,HOR-Ht*.10],[Wt*.22,HOR-Ht*.09],[Wt*.27,HOR-Ht*.14],[Wt*.31,HOR-Ht*.12],[Wt*.34,HOR-Ht*.06],[Wt*.36,HOR+Ht*.02],[Wt*.33,HOR+Ht*.08],[Wt*.28,HOR+Ht*.12],[Wt*.2,HOR+Ht*.16],[Wt*.1,HOR+Ht*.22],[0,HOR+Ht*.26]];
+ g=x.createLinearGradient(0,HOR-Ht*.15,Wt*.36,HOR+Ht*.2);g.addColorStop(0,P.rock2);g.addColorStop(1,P.rock);x.fillStyle=g;x.beginPath();cliff.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fill();
+ x.save();x.beginPath();cliff.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.clip();
+ for(let i=0;i<60;i++){x.fillStyle=R()<.5?P.rock:P.rock2;x.globalAlpha=.35;x.beginPath();x.ellipse(R()*Wt*.36,HOR+(R()-.4)*Ht*.3,10+R()*40,3+R()*8,R()*.6-.3,0,7);x.fill();}x.globalAlpha=1;
+ /* зелень на уступах */
+ for(let i=0;i<45;i++){x.fillStyle=R()<.5?P.veg:P.veg2;x.globalAlpha=.8;x.beginPath();x.ellipse(R()*Wt*.33,HOR-Ht*.12+R()*Ht*.14,12+R()*26,6+R()*10,0,0,7);x.fill();}x.globalAlpha=1;x.restore();
+ /* домики деревушки */
+ for(let i=0;i<11;i++){const hx=Wt*.04+R()*Wt*.27,hy=HOR-Ht*.11+R()*Ht*.09,w=18+R()*18,h=14+R()*14;
+  x.fillStyle=P.house;x.fillRect(hx,hy,w,h);x.fillStyle=P.roof;x.fillRect(hx-2,hy-5,w+4,6);x.fillStyle='rgba(40,40,60,.55)';for(let k=0;k<2;k++)x.fillRect(hx+4+k*8,hy+5,3,4);}
+ /* колокольня */
+ {const bx=Wt*.21,by=HOR-Ht*.15;x.fillStyle=P.house;x.fillRect(bx,by,16,46);x.fillStyle=P.roof;x.beginPath();x.moveTo(bx-3,by);x.lineTo(bx+8,by-16);x.lineTo(bx+19,by);x.closePath();x.fill();}
+ /* кипарисы и пинии */
+ for(let i=0;i<14;i++){const tx=Wt*.02+R()*Wt*.32,ty=HOR-Ht*.13+R()*Ht*.16,h=30+R()*50;x.fillStyle=P.cyp;x.beginPath();x.moveTo(tx,ty-h);x.quadraticCurveTo(tx+8,ty-h*.5,tx+5,ty);x.lineTo(tx-5,ty);x.quadraticCurveTo(tx-8,ty-h*.5,tx,ty-h);x.fill();}
+ for(let i=0;i<5;i++){const tx=Wt*.05+R()*Wt*.28,ty=HOR-Ht*.1+R()*Ht*.1;x.fillStyle=P.cyp;x.fillRect(tx-2,ty-30,4,30);x.fillStyle=P.veg;x.beginPath();x.ellipse(tx,ty-34,26+R()*14,12,0,0,7);x.fill();}
+ /* лоза по верхним углам: листья и гроздья */
+ const leaf=(lx,ly,r,rot,col)=>{x.save();x.translate(lx,ly);x.rotate(rot);x.fillStyle=col;x.beginPath();for(let k=0;k<5;k++){const a=-Math.PI/2+(k-2)*.62;x.lineTo(Math.cos(a)*r,Math.sin(a)*r);x.lineTo(Math.cos(a+.31)*r*.55,Math.sin(a+.31)*r*.55);}x.closePath();x.fill();x.restore();};
+ const vine=(ox,dir)=>{x.strokeStyle=P.cyp;x.lineWidth=5;x.beginPath();x.moveTo(ox,0);x.bezierCurveTo(ox+dir*120,90,ox+dir*60,200,ox+dir*220,260);x.stroke();
+  for(let i=0;i<9;i++){const t=i/8;const lx=ox+dir*(20+t*200)+(R()-.5)*60,ly=20+t*230+(R()-.5)*50;leaf(lx,ly,34+R()*22,R()*6,R()<.5?P.leaf:P.leaf2);}
+  const gx=ox+dir*110,gy=170;for(let r=0;r<4;r++)for(let k=0;k<=4-r;k++){x.fillStyle=P.grape;x.beginPath();x.arc(gx+(k-(4-r)/2)*14,gy+r*13,8,0,7);x.fill();x.fillStyle='rgba(255,255,255,.35)';x.beginPath();x.arc(gx+(k-(4-r)/2)*14-3,gy+r*13-3,2.5,0,7);x.fill();}};
+ vine(0,1);
+ /* справа — другая ветка: короче, без грозди, листья мельче */
+ {x.strokeStyle=P.cyp;x.lineWidth=4;x.beginPath();x.moveTo(Wt,40);x.bezierCurveTo(Wt-90,60,Wt-140,150,Wt-60,230);x.stroke();for(let i=0;i<6;i++){const t=i/5;leaf(Wt-30-t*110+(R()-.5)*40,30+t*190+(R()-.5)*40,24+R()*16,R()*6,R()<.5?P.leaf:P.leaf2);}}
+ /* дымка у горизонта */
+ g=x.createLinearGradient(0,HOR-120,0,HOR+100);g.addColorStop(0,'rgba(230,236,240,0)');g.addColorStop(.55,day?'rgba(230,236,240,.22)':'rgba(240,190,160,.16)');g.addColorStop(1,'rgba(230,236,240,0)');x.fillStyle=g;x.fillRect(0,HOR-120,Wt,220);
+ return c;
+}
+function applyScene(){if(SCENE.theme===THEME)return;SCENE.theme=THEME;const theme=THEME;
+ const key='vb_scene_'+CACHE_V+'_'+theme+'_'+(MOBILE?'m':'d');const cached=cacheGet(key);
+ const set=url=>{SCENE.url=url;document.querySelectorAll('.screen.sea').forEach(el=>{el.style.backgroundImage=url?'url('+url+')':'';});};
+ if(cached){set(cached);return;}
+ /* рисуем в свободное время, не задерживая первый кадр меню */
+ const job=()=>{if(SCENE.theme!==theme)return;try{const c=paintScene(theme);const url=c.toDataURL('image/jpeg',.8);set(url);cachePut(key,url);}catch(e){set(null);}};
+ if(window.requestIdleCallback)requestIdleCallback(job,{timeout:1500});else setTimeout(job,60);}
+/* рисуется первым в кадре; sphere-атрибуты после него нужно привязать заново */
+function drawSky(asp){
+ if(!SKY)return;if(!SKY.ready||SKY.theme!==THEME)uploadSky();if(!SKY.ready)return;
+ gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.disable(gl.BLEND);gl.useProgram(SKY.prog);
+ gl.uniform1f(SKY.u.uAsp,asp);gl.uniform1f(SKY.u.uTh,Math.tan(CFG.BG_FOV*Math.PI/360));gl.uniform1f(SKY.u.uDim,THEME==='light'?1:.9);
+ const Rm=m3(mMul(mRotY(-angle*CFG.BG_PAR*Math.PI/180),mRotX(-tiltX*CFG.BG_TILT*Math.PI/180)));gl.uniformMatrix3fv(SKY.u.uRot,false,Rm);
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,SKY.tex);gl.uniform1i(SKY.u.uSky,0);
+ gl.bindBuffer(gl.ARRAY_BUFFER,SKY.buf);gl.enableVertexAttribArray(SKY.aP);gl.vertexAttribPointer(SKY.aP,2,gl.FLOAT,false,0,0);
+ gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ gl.useProgram(prog);bindSphere();gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.enable(gl.BLEND);
+}
+initGL();
+cv.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;});
+cv.addEventListener('webglcontextrestored',()=>{initGL();glLost=false;resize();});
+
+let W=1,H=1,DPR=1,camD=12,unitPx=60;
+let DPR_CAP=MOBILE?1.5:2;
+function resize(){if(glLost)return;DPR=Math.min(devicePixelRatio||1,DPR_CAP);
+ W=stage.clientWidth||1;H=stage.clientHeight||1;
+ cv.width=W*DPR|0;cv.height=H*DPR|0;fx.width=W*DPR|0;fx.height=H*DPR|0;fctx.setTransform(DPR,0,0,DPR,0,0);
+ gl.viewport(0,0,cv.width,cv.height);
+ /* подбор камеры: ягода ~12–15% ширины экрана, гроздь целиком в кадре */
+ const LAND=matchMedia('(orientation:landscape) and (max-height:520px)').matches;
+ const freeW=LAND?Math.max(200,W-230):W,freeH=LAND?H-40:H;   /* в ландшафте по бокам HUD и кнопки */
+ unitPx=Math.min(.15*W,.72*freeH/(CONE_H+1.6),.86*freeW/(2*BUNCH_R+.3));
+ camD=(1/Math.tan(CFG.FOV/2))*H/(2*unitPx);}
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,120));
+
+/* =============== раскладка грозди (перевёрнутый конус) =============== */
+const LV=6;let DY=.92,CONE_R=1.4,CONE_H=(LV-1)*DY,BUNCH_R=2.0; /* v0.7: 6 колец; DY и радиус — по уровню (см. newGame) */
+function coneLayout(n,sp){ /* подобрать радиус вершины так, чтобы ёмкость колец ≈ n; sp — шаг укладки (меньше = плотнее) */
+ sp=sp||1;
+ let best=null;
+ for(let R0=.25;R0<=2.2;R0+=.02){const caps=[];for(let k=0;k<LV;k++){const r=R0*(1-k/(LV-.25));caps.push(Math.max(1,2*Math.PI*Math.max(r,0)/sp));}
+  const sum=caps.reduce((a,b)=>a+b,0);if(!best||Math.abs(sum-n)<Math.abs(best.sum-n))best={R0,caps,sum};}
+ /* распределить n по уровням пропорционально (метод наибольших остатков) */
+ const raw=best.caps.map(c=>c*n/best.sum),cnt=raw.map(Math.floor);let rest=n-cnt.reduce((a,b)=>a+b,0);
+ raw.map((v,i)=>[v-cnt[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,rest).forEach(([,i])=>cnt[i]++);
+ const out=[];for(let k=0;k<LV;k++){const m=cnt[k];if(!m)continue;const r=m===1?0:best.R0*(1-k/(LV-.25));
+  /* v0.8: кольца «гнутые», как восьмёрка у колеса: у каждого свой наклон и волна по радиусу и высоте — гроздь не выглядит ровной пирамидкой */
+  const w={a1:.04+rnd(.07),p1:rnd(6.28),a2:rnd(.05),p2:rnd(6.28),t1:.07+rnd(.1),q1:rnd(6.28),t2:rnd(.07),q2:rnd(6.28),t3:rnd(.04),q3:rnd(6.28),cx:rnd(.22)-.11,cz:rnd(.22)-.11}; /* cx/cz — ось грозди слегка «гуляет» от кольца к кольцу */
+  const off=rnd(6.28)+k*.6;for(let i=0;i<m;i++){const a=off+i/m*Math.PI*2;
+   const rr=r*(1+w.a1*Math.sin(a+w.p1)+w.a2*Math.sin(2*a+w.p2));
+   const dy=r*(w.t1*Math.sin(a+w.q1)+w.t2*Math.sin(2*a+w.q2)+w.t3*Math.sin(3*a+w.q3));
+   out.push({x:w.cx*(r>0)+rr*Math.cos(a)+rnd(.08)-.04,y:CONE_H/2-k*DY+dy+rnd(.08)-.04,z:w.cz*(r>0)+rr*Math.sin(a)+rnd(.08)-.04,phi:a,ring:m>1});}}
+ return {R0:best.R0,pts:out};
+}
+
+/* =============== состояние игры =============== */
+let LVL=LEVELS[0],berries=[],halves=[],layer=0,running=false,paused=false,locked=false;
+/* v0.8: заказ слоя */
+let order=null,lastOrder=null,orderQueue=[],freeCuts=0;
+let angle=-20,vel=0,tiltX=6,shakeT=0,tStart=0,tPause=0,stats={cuts:0,mist:0,triples:0,orders:0,total:0};
+/* ---------- очки v0.5 ----------
+   +10 срез спелой · +50 тройка · +100 слой очищен · +200 гроздь + запас времени (600 − секунды) ·
+   штрафы: −15 начал резать сырую/недозрелую · −10 спелая, но с чужим признаком. Ниже нуля не опускается. */
+const PTS={cut:10,triple:50,layer:100,bunch:200,timeMax:600,raw:-15,wrong:-10};
+let score=0,SC={cut:0,triple:0,layer:0,bunch:0,time:0,pen:0};
+/* v0.6 */
+let layerN=[32,28,21],layerEl=0,hintHold=null,stress=false,stressNext=0,stressBeep=0,comboN=0,comboUntil=0,waves=[];
+const PTS6={over1:-5,over2:-10,rot:-20,gold:25};
+const PTS8={order:100,bonus:5}; /* v0.8 */
+function addScore(n,kind,sx,sy){const ap=Math.max(-score,n);score+=ap;SC[kind]=(SC[kind]||0)+ap; /* ниже нуля не уходим; в разбивку идёт фактически списанное */$('stScore').textContent=score;
+ if(sx!==undefined)ftext(sx,sy+(n<0?24:-22),(n>0?'+':'−')+Math.abs(n),false,n<0,true);}
+const now=()=>performance.now();
+function activeBerries(){return berries.filter(b=>b.layer===layer&&b.alive&&b.state!=='dying')}
+
+let GEN=0;
+/* отложенные шаги правил привязаны к поколению партии: выход в меню / новая гроздь отменяет хвосты старой */
+function later(ms,fn){const g0=GEN;setTimeout(()=>{if(g0===GEN)fn();},ms);}
+function newGame(){
+ GEN++;berries=[];halves=[];order=null;lastOrder=null;orderQueue=[];freeCuts=0;P=[];trail=[];layer=0;locked=false;if(BOT.on)BOT.toggle();angle=-20+rnd(40);vel=0;tiltX=6;stats={cuts:0,mist:0,triples:0,orders:0,total:0};score=0;SC={cut:0,triple:0,layer:0,bunch:0,time:0,pen:0};$('stScore').textContent='0';stress=false;comboN=0;comboUntil=0;waves=[];document.body.classList.remove('stress');
+ const sleepK=[1,.42,.2]; /* спящие слои сжаты внутрь грозди; при пробуждении перестраиваются в свой конус */
+ DY=.92*(LVL.dy||1);CONE_H=(LV-1)*DY;BUNCH_R=0;
+ layerN=lvLayers(LVL);layerN.forEach((n,L)=>{
+  const lay=coneLayout(n,LVL.dens);if(!L)BUNCH_R=lay.R0+.55*(LVL.size||1);
+  /* спелость по распределению уровня */
+  const r=[];const nr=Math.round(n*LVL.dist[0]),nm=Math.round(n*LVL.dist[1]);
+  for(let i=0;i<n;i++)r.push(i<nr?0:(i<nr+nm?1:2));shuffle(r);
+  /* признаки: тройками, чтобы слой в принципе был проходим */
+  const f=[];for(let i=0;i<n;i++)f.push(LVL.feats[(i/3|0)%LVL.feats.length]);shuffle(f);
+  lay.pts.forEach((p,i)=>{
+   const tilt=p.ring?-.25:0; /* верхушка ягоды чуть к оси — ягоды «висят» */
+   const Rb=mMul(mRotY(-p.phi+Math.PI/2),mMul(mRotX(tilt+rnd(.3)-.15),mRotY(LVL.shape?rnd(.5)-.25:rnd(6.28)))); /* фигурные — лицом наружу, лишь лёгкий разброс */
+   berries.push({id:berries.length,layer:L,wake:[p.x,p.y,p.z],sleep:[p.x*sleepK[L],L?p.y*(.65-L*.12)+.35+L*.2:p.y,p.z*sleepK[L]],
+    pos:[0,0,0],Rb,ripe:r[i],feat:f[i],col:pick(LVL.cols),seed:rnd(100),
+    state:'idle',closedUntil:0,flash:0,sc:1,tsc:1,alpha:1,alive:true,wk:L?0:1,twk:L?0:1,sx:0,sy:0,sr:0,sz:0,over:0,fresh:false,special:null,frozen:0});
+  });
+  /* v0.6 спец-ягоды: золотая — по одной на слой; ледяная — на слоях 2–3 с 4-й грозди */
+  const lb=berries.filter(b=>b.layer===L);
+  const gold=pick(lb);gold.special='gold';gold.ripe=2;gold.col=[.96,.78,.28];
+  if(L>0&&LVL.n>=4){const ice=pick(lb.filter(b=>!b.special));ice.special='ice';ice.ripe=2;ice.col=[.70,.88,1];}
+ });
+ berries.forEach(b=>{b.pos=b.layer?b.sleep.slice():b.wake.slice();b.tsc=CFG.SIZE[b.ripe];b.sc=b.tsc;});
+ stats.total=berries.length;tStart=now();layerEl=0;resize();
+ setupLayerOrders();ensureSolvable(true);updateHUD();later(900,introSpecials);
+}
+
+/* ---------- вспомогательное для правил ---------- */
+function raiseBerry(b){if(b.special)return;if(b.ripe<2){b.ripe++;b.tsc=CFG.SIZE[b.ripe];b.flash=1;if(b.ripe===2){b.fresh=true;b.over=0;}}}
+function normals(){return activeBerries().filter(b=>!b.special);} /* обычные ягоды слоя (без спец-ягод) */
+function raiseRandom(n){ /* 4 случайные ягоды слоя на одну ступень; средние → спелые только пока спелых меньше RIPE_CAP */
+ let ripeN=normals().filter(b=>b.ripe===2).length,k=0;
+ for(const b of shuffle(normals().filter(b=>b.ripe<2))){if(k>=n)break;if(b.ripe===1&&ripeN>=CFG.RIPE_CAP)continue;raiseBerry(b);k++;if(b.ripe===2)ripeN++;}
+ if(k)S.raise();return k;}
+function forceRaiseRawest(n){ /* 3.6: нет спелых — принудительно 4 самые сырые */
+ const c=normals().filter(b=>b.ripe<2).sort((a,b)=>a.ripe-b.ripe||Math.random()-.5).slice(0,n);c.forEach(raiseBerry);return c.length;}
+/* =============== v0.8: ЗАКАЗ =============== */
+/* таблица заказов: ORDERS[гроздь][слой] = список заказов слоя; заказ = три слота [признак, состояние].
+   признак: 0 роса / 1 косточки / 2 пузырьки / 'R' случайный / 'F' один и тот же случайный / 'D' разные.
+   состояние: 'ripe' спелая / 'over1' перезрела 1 / 'over2' перезрела 2. Сырые и средние в заказе не бывают. */
+const RP='ripe',O1='over1',O2='over2';
+const ORDERS={
+ 1:[ [[[0,RP],[0,RP],[0,RP]]], [[[0,RP],[0,RP],[0,RP]]], [[[0,RP],[0,RP],[0,RP]]] ],
+ 2:[ [[[0,RP],[0,RP],[1,RP]]], [[[1,RP],[1,RP],[0,RP]]], [[[0,RP],[1,RP],['R',O1]]] ],
+ 3:[ [[[1,RP],[1,RP],[2,RP]]], [[[1,RP],[2,RP],['R',O1]]], [[[1,O1],[2,O1],['R',RP]]] ],
+ 4:[ [[[0,RP],[0,RP],[2,RP]]], [[['R',O1],['R',RP],['R',RP]]], [[['R',O1],['R',O1],['R',O1]]] ],
+ 5:[ [[[1,RP],[1,RP],['R',O1]]], [[['R',O2],['R',RP],['R',RP]]], [[['R',O2],['R',O2],['R',O2]]] ],
+ 6:[ [[['F',RP],['F',RP],['F',RP]]], [[['F',RP],['F',O1],['F',O2]]], [[[2,RP],[1,O1],['R',O2]]] ],
+ 7:[ [[['D',RP],['D',RP],['D',RP]]], [[['F',RP],['F',RP],['F',RP]]], [[['D',RP],['D',RP],['D',O1]]] ],
+ 8:[ [[['R',RP],['R',RP],['R',RP]]], [[['R',O1],['R',O1],['R',O1]]], [[['R',O2],['R',O2],['R',O2]]] ],
+ 9:[ [[[0,RP],[0,RP],[0,RP]],[[1,RP],[1,RP],[1,RP]]], [[['R',O1],['R',O1],['R',O1]],[['R',RP],['R',RP],['R',RP]]], [[['D',RP],['D',RP],['R',O1]],[['F',RP],['F',O1],['F',O2]]] ],
+ 10:[ [[['D',RP],['D',RP],['D',RP]]], [[['D',O1],['D',O2],['D',O1]]], [[['R',RP],['R',RP],['R',RP]],[['R',O1],['R',O2],['R',O1]],[['D',RP],['D',O1],['D',O2]]] ],
+};
+const ORDER_T=[10,12,15]; /* таймер заказа грозди 8 по слоям, с */
+function mkOrder(spec){const fs=LVL.feats,F=pick(fs),d=shuffle(fs.slice());
+ const slots=spec.map(([t,st])=>({feat:t==='F'?F:(t==='D'?(d.length?d.shift():pick(fs)):(t==='R'?pick(fs):(fs.includes(t)?t:pick(fs)))),state:st,filled:false}));
+ return {slots,spec,completed:0,timeLimit:LVL.n===8?ORDER_T[layer]:0,timeLeft:LVL.n===8?ORDER_T[layer]:0,bonus:0,cut:[]};}
+function setupLayerOrders(){const tab=ORDERS[LVL.n]||ORDERS[1];orderQueue=(tab[layer]||tab[0]).map(o=>o.map(sl=>sl.slice()));freeCuts=0;newOrder(true);}
+function newOrder(first){if(order)lastOrder=order;order=null;if(orderQueue.length){order=mkOrder(orderQueue.shift());ensureSolvable(true);if(!first)ftext(W/2,H*.3,T('ftNewOrder'),false);}updateHUD();}
+function matchesSlot(b,sl){if(b.special||b.ripe!==2)return false;if(sl.feat===-1)return true;if(b.feat!==sl.feat)return false;const o=b.over||0;return sl.state===RP?o===0:(sl.state===O1?o===1:o===2);}
+function findMatchingSlot(b){if(!order)return null;for(const sl of order.slots){if(!sl.filled)if(matchesSlot(b,sl))return sl;}return null;}
+function isNeededForOrder(b){return !!findMatchingSlot(b);}
+function willMatch(b){if(!order||b.special)return false;const o=b.over||0;return order.slots.some(sl=>!sl.filled&&sl.feat===b.feat&&((sl.state===RP&&b.ripe===1)||(sl.state===O1&&b.ripe===2&&o===0)||(sl.state===O2&&o===1)));}
+function getFutureSlots(){const f=[];orderQueue.forEach(o=>o.forEach(([t,st])=>f.push({feat:typeof t==='number'?t:-1,state:st})));return f.length?f:[{feat:-1,state:RP}];} /* без заказов впереди «полезны» все спелые (свободная фаза) */
+function matchesAnySlot(b,slots){return slots.some(sl=>sl.feat===-1?(b.ripe===2&&(sl.state===RP||matchesSlot(b,{feat:b.feat,state:sl.state}))):matchesSlot(b,sl));}
+function openSlots(){return order?order.slots.filter(sl=>!sl.filled):[];}
+/* страховка: для каждого открытого слота на слое есть хотя бы одна подходящая ягода; в свободной фазе — хотя бы одна спелая */
+function ensureSolvable(silent){const L=normals();if(!L.length)return;let touched=false;
+ if(order){ /* на каждый открытый слот — своя ягода (одинаковые слоты не делят одного кандидата) */
+  const groups={};for(const sl of order.slots){if(sl.filled)continue;const k=sl.feat+sl.state;(groups[k]=groups[k]||{sl,n:0}).n++;}
+  for(const k in groups){const g=groups[k];let have=L.filter(b=>matchesSlot(b,g.sl)).length,guard=0;while(have<g.n&&guard++<5){if(!forceCreateCandidate(g.sl))break;have++;touched=true;}}}
+ else{ /* свободная фаза: всегда есть хотя бы 3 спелые (или сколько осталось) */
+  const want=Math.min(3,L.length);let have=L.filter(b=>b.ripe===2).length;
+  for(const c of L.slice().sort((a,b)=>b.ripe-a.ripe)){if(have>=want)break;if(c.ripe===2)continue;while(c.ripe<2)raiseBerry(c);have++;touched=true;}}
+ if(touched&&!silent)S.raise();}
+function forceCreateCandidate(sl){const L=normals();const want=sl.state===RP?0:(sl.state===O1?1:2);
+ const cost=b=>{if(b.ripe<2)return(want===0?0:3)+(2-b.ripe);const o=b.over||0;return o===want?0:(o<want?want-o:3+(o-want));};
+ let pool=L.filter(b=>b.feat===sl.feat&&!isNeededForOrder(b));
+ if(!pool.length){pool=L.filter(b=>!isNeededForOrder(b));if(!pool.length)return false;}
+ pool.sort((a,b)=>cost(a)-cost(b)||Math.random()-.5);const c=pool[0];
+ c.feat=sl.feat;c.ripe=2;c.tsc=CFG.SIZE[2];c.over=want;c.fresh=want===0;c.frozen=0;c.flash=1;return true;}
+
+/* ---------- разрез ---------- */
+function cutGesture(b,ang,speed,sx,sy){
+ if(b.state==='closed'){S.click();return;}
+ if(TUT.on&&!TUT.allows(b)){S.click();ftext(sx,sy,T(TUT.blockMsg()),false,true);return;} /* v0.8: в обучении режутся только подсвеченные */
+ if(b.special==='ice'){ /* ледяная: замораживает 6 ближайших на 2 хода — они не перезревают */
+  splitBerry(b,ang,speed,sx,sy);stats.cuts++;hideCue();buzz(15);S.ice();
+  const near=normals().filter(o=>o!==b).sort((p,q)=>dist3(p.pos,b.pos)-dist3(q.pos,b.pos)).slice(0,6);near.forEach(o=>{o.frozen=2;o.flash=.6;});
+  ftext(sx,sy,T('ftIce'),true);waves.push({x:sx,y:sy,r0:b.sr,r1:b.sr*4,t:0,life:.7,col:'170,225,255'});holdHint(T('hintIceDone',{n:near.length}),4500);TUT.ev('ice');updateHUD();return;}
+ if(b.special==='gold'){ /* золотая: закрывает один слот заказа; после заказа — убирает 3 лишние ягоды */
+  splitBerry(b,ang,speed,sx,sy);stats.cuts++;hideCue();buzz(15);S.gold();addScore(PTS6.gold,'cut',sx,sy);TUT.ev('gold');
+  if(order){const rank={over2:0,over1:1,ripe:2};const sl=openSlots().sort((a,b)=>rank[a.state]-rank[b.state])[0];
+   sl.filled=true;sl.gold=true;order.completed++;ftext(sx,sy+26,T('ftGoldSlot'),true);holdHint(T('hintGoldSlot'),4000);
+   if(order.completed===3)completeOrder(b,sx,sy);else{S.pop(order.completed);ensureSolvable();}}
+  else{const n=clearUseless(3,b);ensureSolvable();ftext(sx,sy+26,T('ftGoldFree',{n}),true);holdHint(T('hintGoldFree',{n}),4000);}
+  updateHUD();return;}
+ if(order){ /* фаза заказа: подходит под открытый слот? */
+  const sl=findMatchingSlot(b);
+  if(!sl){b.state='closed';b.closedUntil=now()+CFG.CLOSE_MS;stats.mist++;S.puf();buzz(40);TUT.ev('mistake');
+   ftext(sx,sy,T('ftNotOrder'),false,true);addScore(PTS.wrong,'pen',sx,sy);spawnPuf(sx,sy);updateHUD();return;}
+  splitBerry(b,ang,speed,sx,sy);stats.cuts++;addScore(PTS.cut,'cut',sx,sy);hideCue();buzz(15);TUT.ev('cut');
+  sl.filled=true;order.completed++;order.cut.push(b);
+  if(order.completed===3)completeOrder(b,sx,sy);else{S.pop(order.completed);ensureSolvable();}
+  updateHUD();return;}
+ /* свободная фаза: любая спелая, каждые три — серия */
+ if(b.ripe<2){b.state='closed';b.closedUntil=now()+CFG.CLOSE_MS;stats.mist++;S.puf();buzz(40);TUT.ev('mistake');
+  ftext(sx,sy,T('ftRaw'),false,true);addScore(PTS.raw,'pen',sx,sy);spawnPuf(sx,sy);updateHUD();return;}
+ splitBerry(b,ang,speed,sx,sy);stats.cuts++;addScore(PTS.cut,'cut',sx,sy);hideCue();buzz(15);TUT.ev('cut');
+ if(b.over){addScore(b.over>1?PTS6.over2:PTS6.over1,'pen',sx,sy+40);ftext(sx,sy+22,T('ftOver'),false,true);} /* перезрелую резать можно, но со штрафом */
+ freeCuts++;
+ if(freeCuts%3===0)completeSeries(b,sx,sy);else{S.pop(freeCuts%3);ensureSolvable();}
+ updateHUD();
+}
+function completeSeries(b,sx,sy){
+ stats.triples++;locked=true;buzz([20,30,20]);TUT.ev('series');
+ comboN=(now()<comboUntil)?comboN+1:1;const pts=PTS.triple*comboN;
+ later(120,()=>{S.triple(comboN);ftext(sx,sy,comboN>1?T('ftCombo',{n:comboN}):T('ftTriple'),true);addScore(pts,'triple',sx,sy+30);});
+ chainReaction(b,b.feat);
+ later(420,recount);
+}
+function completeOrder(b,sx,sy){
+ locked=true;stats.orders++;buzz([20,30,20]);TUT.ev('order');
+ later(120,()=>{S.order();ftext(W/2,H*.4,T('ftOrder'),true);addScore(PTS8.order,'order',sx,sy+30);});
+ later(500,bonusClear);
+ later(1100,()=>{newOrder(false);recount();});
+}
+/* бонус-«магнит»: после заказа до 5 лишних ягод растворяются — соседи срезанных, не нужные ни текущему, ни будущим заказам, затем самые бесполезные (сырые) */
+function bonusClear(){if(!order)return 0;const fut=getFutureSlots(),lim=5,cl=[];
+ const useful=n=>findMatchingSlot(n)||matchesAnySlot(n,fut);
+ const R=1.2*(LVL.dens||1);
+ for(const b of order.cut){for(const n of normals()){if(cl.length>=lim)break;if(cl.includes(n)||useful(n))continue;if(dist3(n.pos,b.pos)<R)cl.push(n);}if(cl.length>=lim)break;}
+ for(const n of normals().slice().sort((a,b)=>a.ripe-b.ripe||Math.random()-.5)){if(cl.length>=lim)break;if(cl.includes(n)||useful(n))continue;cl.push(n);}
+ cl.forEach(n=>{n.state='dying';n.flash=1;n.dieT=0;});
+ if(cl.length){S.vzhuh();S.bonus();const c=order.cut[order.cut.length-1];if(c)waves.push({x:c.sx,y:c.sy,r0:c.sr,r1:Math.min(W,H)*.42,t:0,life:.75,col:'232,197,106'});
+  ftext(W/2,H*.5,T('ftBonus',{n:cl.length}),true);order.bonus+=cl.length;addScore(cl.length*PTS8.bonus,'bonus');}
+ return cl.length;}
+/* золотая после заказа: убрать n самых бесполезных ягод */
+function clearUseless(n,b){const fut=getFutureSlots();const cl=normals().filter(o=>!matchesAnySlot(o,fut)).sort((p,q)=>p.ripe-q.ripe||dist3(p.pos,b.pos)-dist3(q.pos,b.pos)).slice(0,n);
+ cl.forEach(o=>{o.state='dying';o.flash=1;o.dieT=0;});if(cl.length){S.vzhuh();later(560,()=>{if(normals().length%3)fixMod3();checkLayer();});}return cl.length;}
+function dist3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);}
+function holdHint(text,ms){hintHold={text,until:now()+ms};updateHUD();later(ms+20,updateHUD);}
+/* всплывающая карточка при первом появлении золотой/ледяной (один раз, localStorage) */
+function toast(key,html,ms){try{if(localStorage.getItem('vb_seen_'+key))return;localStorage.setItem('vb_seen_'+key,'1');}catch(e){}
+ const d=document.createElement('div');d.className='toast';d.innerHTML=html;$('stage').appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
+ setTimeout(()=>{d.classList.remove('on');setTimeout(()=>d.remove(),400);},ms||6500);}
+function introSpecials(){if(TUT.on)return;const L=activeBerries();
+ if(L.some(b=>b.special==='gold'))toast('gold',T('toastGold'));
+ if(L.some(b=>b.special==='ice'))setTimeout(()=>toast('ice',T('toastIce')),L.some(b=>b.special==='gold')?2500:0);}
+function chainReaction(b,feat){
+ const R=CFG.CHAIN_R[layer];const t=normals().filter(o=>o.feat===feat&&o.ripe<2&&!o.over&&!isNeededForOrder(o)&&!willMatch(o)&&dist3(o.pos,b.pos)<R);
+ if(t.length<2)return;
+ const unit=b.sr/Math.max(.01,.5*(LVL.size||1)*CFG.SIZE_MUL*b.sc);
+ later(200,()=>{t.forEach(raiseBerry);S.chain();waves.push({x:b.sx,y:b.sy,r0:b.sr,r1:R*unit,t:0,life:.6,col:'232,197,106'});ftext(b.sx,b.sy-40,T('ftChain',{n:t.length}),false);});
+}
+/* переспевание по шагам: вызывается после каждой тройки (и по таймеру в стресс-режиме).
+   спелая и не свежая → перезрела 1 → перезрела 2 → сгнила (штраф, растворяется). Свежие (только что дозревшие) и замороженные шаг пропускают. */
+function advanceOverripe(){
+ let rotted=0;
+ for(const b of activeBerries()){
+  if(b.special)continue;
+  if(isNeededForOrder(b))continue; /* v0.8: нужные для заказа не портятся */
+  if(b.frozen>0){b.frozen--;b.fresh=false;continue;}
+  if(b.over===2){rotBerry(b);rotted++;}
+  else if(b.over===1)b.over=2;
+  else if(b.ripe===2&&!b.fresh)b.over=1;
+  b.fresh=false;
+ }
+ if(rotted){S.puf();buzz(40);fixMod3();}
+}
+function rotBerry(b){b.state='dying';b.flash=0;b.dieT=0;b.rot=true;stats.mist++;addScore(PTS6.rot,'pen',b.sx,b.sy);ftext(b.sx,b.sy,T('ftRot'),false,true);spawnPuf(b.sx,b.sy);}
+/* после гниения/льда число ягод может перестать делиться на 3 — лишние (самые спелые) растворяются, как при пересчёте */
+function fixMod3(){const L=normals(),ex=L.length%3;if(!ex)return;
+ L.sort((a,b)=>(isNeededForOrder(a)-isNeededForOrder(b))||((b.over*10+b.ripe)-(a.over*10+a.ripe))||Math.random()-.5).slice(0,ex).forEach(v=>{v.state='dying';v.flash=1;v.dieT=0;});S.vzhuh();}
+function splitBerry(b,ang,speed,sx,sy){
+ b.alive=false;
+ /* 6 положений: снап направления взмаха к 0°/45°/90°/135° (линия реза в пространстве вида) */
+ let a=((ang%Math.PI)+Math.PI)%Math.PI;const deg=a*180/Math.PI;
+ /* v0.6: 6 положений — вертикаль, почти-вертикаль, почти-горизонталь, горизонталь (и их зеркала) */
+ let snap;if(deg<15||deg>165)snap=0;else if(Math.abs(deg-90)<15)snap=90;else if(deg<45)snap=22.5;else if(deg<75)snap=67.5;else if(deg<135)snap=112.5;else snap=157.5;
+ const ra=snap*Math.PI/180;
+ const axisW=[Math.cos(ra),-Math.sin(ra),0];          /* линия реза (экранный y вниз → вид y вверх) */
+ const nW=[-axisW[1],axisW[0],0];                     /* нормаль плоскости реза — направление разлёта */
+ const R3=m3T(b.MV);                                  /* в локальные координаты ягоды (транспонированная 3x3) */
+ let no=[R3[0]*nW[0]+R3[1]*nW[1]+R3[2]*nW[2],R3[3]*nW[0]+R3[4]*nW[1]+R3[5]*nW[2],R3[6]*nW[0]+R3[7]*nW[1]+R3[8]*nW[2]];
+ const sc=b.scale;no=[no[0]*sc[0],no[1]*sc[1],no[2]*sc[2]];const l=Math.hypot(...no)||1;no=no.map(v=>v/l);
+ /* сила взмаха → дальность/скорость разлёта (механизм версии 02): 0 у порога, 1 при порог+2.5 px/мс */
+ const sp=clamp((speed-CFG.CUT_SPEED)/2.5,0,1);
+ const R0=new Float32Array(b.MV);R0[12]=R0[13]=R0[14]=0;
+ for(const side of [1,-1])halves.push({b,side,speed:sp,nW,axisW,no,R0,p0:[b.MV[12],b.MV[13],b.MV[14]],t0:now(),dur:480,clip:[no[0],no[1],no[2],side]});
+ spawnJuice(sx,sy,nW,b);
+}
+function recount(){ /* 3.4: тройки = floor(остаток/3), излишек сбрасывается (самые спелые) */
+ const L=normals(),ex=L.length%3;
+ if(ex>0){const victims=L.sort((a,b)=>(isNeededForOrder(a)-isNeededForOrder(b))||(b.ripe-a.ripe)||Math.random()-.5).slice(0,ex);
+  victims.forEach(v=>{v.state='dying';v.flash=1;v.dieT=0;});S.vzhuh();}
+ later(ex?520:60,afterRecount);
+}
+function afterRecount(){
+ if(normals().length){
+  raiseRandom(CFG.RAISE_N);
+  advanceOverripe();
+  let guard=0;while(!normals().some(b=>b.ripe===2)&&normals().length&&guard++<5){forceRaiseRawest(CFG.RAISE_N);S.raise();}
+  ensureSolvable();
+ }
+ comboUntil=now()+CFG.COMBO_MS;
+ locked=false;updateHUD();checkLayer();
+}
+function checkLayer(){
+ if(normals().length)return;
+ if(activeBerries().length){activeBerries().forEach(v=>{v.state='dying';v.flash=1;v.dieT=0;});S.vzhuh();later(520,checkLayer);return;} /* остались только спец-ягоды — растворяются */
+ if(stress){stress=false;document.body.classList.remove('stress');}
+ if(layer<2){layer++;locked=true;S.layer();shake();buzz(30);TUT.ev('layer');layerEl=-0.8;comboN=0;comboUntil=0;if(BOT.on){BOT.toggle();later(900,()=>ftext(W/2,H*.5,T('ftAutoOff'),false));} /* v0.7: авто режет только один слой */
+  berries.filter(b=>b.layer===layer).forEach(b=>b.twk=1);          /* слой просыпается: ягоды перестраиваются */
+  ftext(W/2,H*.35,T('ftLayer',{n:layer+1}),true);if(!stressWas())addScore(PTS.layer,'layer',W/2,H*.35+34);
+  later(800,()=>{locked=false;setupLayerOrders();ensureSolvable();updateHUD();introSpecials();});
+ } else win();
+}
+let _stressWas=false;function stressWas(){const v=_stressWas;_stressWas=false;return v;}
+function win(){running=false;syncGameplay();S.fanfare();bigBurst();document.body.classList.remove('stress');
+ const t=Math.round((now()-tStart)/1000);const tb=Math.max(0,PTS.timeMax-t);addScore(PTS.bunch,'bunch');addScore(tb,'time');
+ const rec={time:t,cuts:stats.cuts,mist:stats.mist,score,auto:stats.auto||undefined};recordWin(LVL.n,rec);
+ $('w-next').hidden=(LVL.n>=LEVELS.length);
+ $('win-info').innerHTML=T('winInfo',{name:lvName(LVL),t:Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),c:stats.cuts,o:stats.orders,tr:stats.triples,m:stats.mist})
+  +'<br>'+(stats.auto?'<span style="color:var(--hint)">'+T('hallAuto')+'</span>':T('winPts',{p:score,rec:PROG.done[LVL.n]&&PROG.done[LVL.n].score===score&&PROG.done[LVL.n].time===t?' · '+T('winRec'):''}))
+  +'<br><span style="font-size:12px;color:var(--mut)">'+T('winBreak',{c:SC.cut,o:SC.order||0,bn:SC.bonus||0,tr:SC.triple,l:SC.layer,b:SC.bunch,t:SC.time,pen:SC.pen})+'</span>';
+ later(900,()=>$('ov-win').classList.add('on'));}
+const REDUCED=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}})();
+function shake(){if(REDUCED)return;const s=$('shaker');s.style.display='contents';shakeT=.45;}
+
+/* =============== обучение (6 шагов, как в Грави-Буме) =============== */
+const TUT={on:false,step:0,a0:0,t0:0,N:13,
+ /* шаги с кнопкой «Далее» (информационные) */
+ info:[4,5,6,9,10],
+ start(){this.on=true;this.step=0;this.a0=angle;this.t0=tiltX;this.ensure('ice');this.show();},
+ /* гарантия: к шагу про золотую/ледяную такая ягода есть на текущем слое (иначе делаем её из незрелой) */
+ ensure(kind){if(activeBerries().some(b=>b.special===kind))return;const c=pick(activeBerries().filter(b=>!b.special&&b.ripe<2&&b.state==='idle'&&!willMatch(b)))||pick(normals().filter(b=>!isNeededForOrder(b)));if(!c)return;
+  c.special=kind;c.ripe=2;c.tsc=CFG.SIZE[2];c.over=0;c.fresh=true;c.flash=1;c.col=kind==='ice'?[.70,.88,1]:[.96,.78,.28];},
+ stop(){this.on=false;tutDone=true;$('trainPlate').classList.remove('on');try{localStorage.setItem('vb_tut','1');}catch(e){}},
+ show(){if(!this.on)return;if(this.step===7)this.ensure('gold');if(this.step===8)this.ensure('ice');$('trainPlate').classList.add('on');$('trStep').textContent=T('tutStep',{a:this.step+1,b:this.N});
+  $('trText').innerHTML=ctl(T('tut')[this.step]);$('trNext').style.display=this.info.includes(this.step)?'':'none';},
+ next(){this.step++;if(this.step>=this.N){this.stop();return;}this.show();S.sel&&S.sel();
+  if(this.step===this.N-1)setTimeout(()=>{if(this.on&&this.step===this.N-1)this.stop();},12000);},
+ tick(){if(!this.on)return;
+  if(this.step===0&&Math.abs(angle-this.a0)>40)this.next();
+  else if(this.step===1&&Math.abs(tiltX-this.t0)>8)this.next();},
+ ev(e){if(!this.on)return;
+  if(this.step===2&&e==='cut')this.next();
+  else if(this.step===3&&e==='order')this.next();
+  else if(this.step===7&&e==='gold')this.next();
+  else if(this.step===8&&e==='ice')this.next();
+  else if(this.step===11&&e==='layer')this.next();
+  else if(this.step===12&&e==='order')this.stop();},
+ /* v0.8: в обучении режутся только ягоды текущего шага */
+ allows(b){const s=this.step;
+  if(s===7)return b.special==='gold';if(s===8)return b.special==='ice';
+  if(s===2||s===3||s>=11){if(b.special)return s>=11;return order?!!findMatchingSlot(b):b.ripe===2;}
+  return false;},
+ blockMsg(){const s=this.step;return s<2?'tutDoStep':(this.info.includes(s)?'tutPressNext':'tutOnlyLit');},
+ /* что подсвечивать дополнительно к заказу: золотую (шаг 8), ледяную (шаг 9) */
+ hilite(){if(!this.on)return null;if(this.step===7)return 'gold';if(this.step===8)return 'ice';return null;}
+};
+$('trNext').onclick=()=>{S.click();TUT.next();};
+S.sel=()=>{tone(1250,.07,'sine',.12);tone(1900,.05,'sine',.07,0,.02)};
+S.order=()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.25,'triangle',.16,0,i*.07));noise(.35,.1,2600,.25)};
+S.bonus=()=>{[880,1175,1480,1760].forEach((f,i)=>tone(f,.12,'sine',.1,0,.1+i*.05))};
+$('trSkip').onclick=()=>{S.click();TUT.stop();};
+
+/* =============== HUD =============== */
+function updateHUD(){
+ const L=activeBerries().length;
+ $('stLayer').textContent=(layer+1)+'/3';$('stBerries').textContent=L+'/'+(layerN[layer]||L);
+ updateOrderBar();
+ const done=berries.filter(b=>!b.alive||b.state==='dying').length;$('pbarI').style.width=(done/stats.total*100)+'%';
+ let h;
+ if(order)h=order.completed?T('hintOrderLeft',{n:3-order.completed}):T('hintOrder');
+ else h=T('hintFree',{n:freeCuts%3});
+ if(hintHold&&now()<hintHold.until)h=hintHold.text;
+ $('hint2').textContent=h;
+}
+function updateOrderBar(){const bar=$('orderBar'),o=order||lastOrder;if(!o){bar.classList.remove('on');return;}bar.classList.add('on');bar.classList.toggle('free',!order); /* после заказа панель остаётся (выполненный заказ), чтобы сцена не прыгала */
+ const c=LVL.cols[0],col='rgb('+c.map(v=>v*255|0).join(',')+')';
+ $('ordSlots').innerHTML=o.slots.map(sl=>'<i class="oslot '+sl.state+(sl.filled?' done':'')+'" style="--bc:'+col+'" title="'+T('feat')[sl.feat]+'">'+FEATS[sl.feat].svg+'<em>'+(sl.gold?'★':'✓')+'</em></i>').join('');
+ const t=$('ordTimer');if(order&&order.timeLimit){t.hidden=false;t.textContent=Math.ceil(Math.max(0,order.timeLeft))+'s';t.style.color=order.timeLeft<3?'var(--bad)':'';}else t.hidden=true;}
+function ftext(x,y,txt,big,bad,pts){const d=document.createElement('div');d.className='ftext'+(big?' big':'')+(bad?' bad':'')+(pts?' pts':'');d.textContent=txt;
+ const r=stage.getBoundingClientRect();d.style.left=(r.left+x)+'px';d.style.top=(r.top+y)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),1000);}
+
+/* =============== частицы и след ножа (2D-канвас) =============== */
+let P=[],trail=[];
+function spawnJuice(x,y,nV,b){
+ const c=LVL.juice;
+ for(let i=0;i<16;i++){const s=i&1?1:-1,sp=2+rnd(4);const ang=Math.atan2(-nV[1]*s,nV[0]*s)+rnd(1.2)-.6;
+  P.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,t:0,life:.45+rnd(.3),r:2+rnd(3),col:c,type:'dot'});}
+ if(b.feat===0)for(let i=0;i<8;i++){const a=rnd(6.28),sp=1+rnd(3);P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,t:0,life:.5,r:1.5+rnd(1.5),col:'230,245,255',type:'dot'});}
+ if(b.feat===1)for(let i=0;i<2;i++)P.push({x:x+rnd(10)-5,y,vx:rnd(2)-1,vy:-1.5,t:0,life:.8,r:4,col:'55,30,18',type:'seed',rot:rnd(6.28)});
+ if(b.feat===2)for(let i=0;i<6;i++)P.push({x:x+rnd(30)-15,y:y+rnd(30)-15,vx:0,vy:-.5,t:0,life:.4+rnd(.3),r:3+rnd(4),col:'220,245,255',type:'bub'});
+}
+function spawnPuf(x,y){for(let i=0;i<10;i++){const a=rnd(6.28),sp=.5+rnd(1.5);P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,t:0,life:.5,r:3+rnd(4),col:'90,80,100',type:'bub'});}}
+function bigBurst(){for(let i=0;i<(REDUCED?40:120);i++){const a=rnd(6.28),sp=2+rnd(7);P.push({x:W/2,y:H/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,t:0,life:.8+rnd(.8),r:2+rnd(4),col:LVL.juice,type:'dot'});}}
+function drawFX(dt){
+ fctx.clearRect(0,0,W,H);
+ /* след ножа — светящаяся линия, гаснет за ~0.15 с */
+ const tn=now();trail=trail.filter(p=>tn-p.t<160);
+ if(trail.length>1){fctx.lineCap='round';fctx.lineJoin='round';
+  for(let i=1;i<trail.length;i++){const a=1-(tn-trail[i].t)/160;fctx.strokeStyle=THEME==="light"?`rgba(70,50,10,${a*.8})`:`rgba(255,255,230,${a*.9})`;fctx.lineWidth=2+a*5;
+   fctx.beginPath();fctx.moveTo(trail[i-1].x,trail[i-1].y);fctx.lineTo(trail[i].x,trail[i].y);fctx.stroke();}}
+ /* v0.8: подсветка под заказ — подходящие: золотое пульсирующее кольцо; «скоро подойдут»: слабое; в обучении — также золотая/ледяная и спелые в свободной фазе */
+ {const hk=TUT.hilite(),pul=.6+.4*Math.sin(tn/180),freeLit=TUT.on&&!order&&TUT.step>=11;
+  for(const b of berries){if(!b.alive||b.layer!==layer||b.state!=='idle'||b.sr<=0)continue;let a=0;
+   if(hk&&b.special===hk)a=pul;
+   else if(order){if(findMatchingSlot(b))a=pul;else if(willMatch(b))a=.18+.1*Math.sin(tn/300+b.seed);}
+   else if(freeLit&&!b.special&&b.ripe===2)a=pul*.8;
+   if(!a)continue;fctx.strokeStyle=`rgba(232,197,106,${a})`;fctx.lineWidth=a>.4?3:2;fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+4+2*pul,0,6.28);fctx.stroke();}}
+ /* v0.6: перезрелые — янтарное/красное кольцо; свежие — мягкий ореол; замороженные — голубое кольцо */
+ for(const b of berries){if(!b.alive||b.layer!==layer||b.state!=='idle'||b.sr<=0)continue;
+  if(b.over){fctx.strokeStyle=b.over>1?'rgba(255,90,70,.85)':'rgba(255,190,70,.75)';fctx.lineWidth=b.over>1?3:2;fctx.setLineDash(b.over>1?[]:[6,5]);fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+3,0,6.28);fctx.stroke();fctx.setLineDash([]);}
+  else if(b.fresh&&b.ripe===2){const a=.25+.2*Math.sin(tn/220+b.seed);fctx.strokeStyle=`rgba(255,255,255,${a})`;fctx.lineWidth=2;fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+3,0,6.28);fctx.stroke();}
+  if(b.frozen>0){fctx.strokeStyle='rgba(170,225,255,.8)';fctx.lineWidth=2;fctx.setLineDash([3,4]);fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+7,0,6.28);fctx.stroke();fctx.setLineDash([]);}}
+ /* волны (цепная реакция, заморозка) */
+ waves=waves.filter(w=>{w.t+=dt;if(w.t>=w.life)return false;const k=w.t/w.life,r=w.r0+(w.r1-w.r0)*(1-Math.pow(1-k,2));
+  fctx.strokeStyle=`rgba(${w.col},${(1-k)*.9})`;fctx.lineWidth=4*(1-k)+1;fctx.beginPath();fctx.arc(w.x,w.y,r,0,6.28);fctx.stroke();return true;});
+ /* комбо: дуга-таймер вокруг грозди */
+ if(comboN>0&&tn<comboUntil&&!locked){const k=(comboUntil-tn)/CFG.COMBO_MS,R=Math.min(W,H)*.46;
+  fctx.strokeStyle='rgba(232,197,106,.55)';fctx.lineWidth=4;fctx.beginPath();fctx.arc(W/2,H/2,R,-Math.PI/2,-Math.PI/2+Math.PI*2*k);fctx.stroke();
+  fctx.fillStyle='rgba(232,197,106,.9)';fctx.font='bold 13px system-ui,sans-serif';fctx.textAlign='center';fctx.fillText('×'+(comboN+1),W/2,H/2-R+16);}
+ /* кольцо-таймер у закрытых ягод */
+ for(const b of berries){if(b.state!=='closed'||!b.alive||b.layer!==layer)continue;const k=Math.max(0,(b.closedUntil-tn)/CFG.CLOSE_MS);
+  fctx.strokeStyle='rgba(255,122,122,.75)';fctx.lineWidth=3;fctx.beginPath();fctx.arc(b.sx,b.sy,b.sr+3,-Math.PI/2,-Math.PI/2+Math.PI*2*k);fctx.stroke();}
+ if(P.length>260)P=P.slice(P.length-260);
+ P=P.filter(p=>{p.t+=dt;if(p.t>=p.life)return false;const k=1-p.t/p.life;
+  p.x+=p.vx*60*dt;p.y+=p.vy*60*dt;
+  if(p.type==='dot'){p.vy+=14*dt;fctx.fillStyle=`rgba(${p.col},${k})`;fctx.beginPath();fctx.arc(p.x,p.y,p.r*k,0,6.28);fctx.fill();}
+  else if(p.type==='seed'){p.vy+=16*dt;p.rot+=dt*6;fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.rot);fctx.fillStyle=`rgba(${p.col},${k})`;fctx.beginPath();fctx.ellipse(0,0,p.r*.6,p.r,0,0,6.28);fctx.fill();fctx.restore();}
+  else{fctx.strokeStyle=`rgba(${p.col},${k})`;fctx.lineWidth=1.5;fctx.beginPath();fctx.arc(p.x,p.y,p.r*(1+p.t*2),0,6.28);fctx.stroke();}
+  return true;});
+}
+
+/* =============== ввод v0.4: мышь — ПРАВАЯ кнопка вращает, ЛЕВАЯ режет; сенсор — ДВА пальца вращают, ОДИН режет ===============
+   Скорость движения больше не решает «вращение или рез» — только силу разлёта половинок. Рез — любое движение левой кнопкой /
+   одним пальцем длиннее CUT_MIN px; ягода выбирается по пути движения (slashSample/bestCand из версии 02). */
+let g=null;const ptrs=new Map(); /* все прижатые указатели: id → последняя точка на сцене */
+function stagePt(e){const r=stage.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top,t:now()};}
+function centroid(ids){let x=0,y=0,n=0;ids.forEach(id=>{const p=ptrs.get(id);if(p){x+=p.x;y+=p.y;n++;}});return n?{x:x/n,y:y/n,t:now()}:null;}
+function startCut(id,p){g={mode:'cut',ids:[id],x0:p.x,y0:p.y,t0:p.t,last:p,pts:[p],done:false,cands:new Map(),maxSp:0,peak:0,moved:0};
+ trail.length=0;trail.push(p);vel=0;stage.classList.remove('grabbing');stage.classList.add('cutting');}
+function startRot(ids){const c=centroid(ids);if(!c)return;g={mode:'rot',ids:ids.slice(),last:c,t:c.t,peak:0,n:ids.length};
+ trail.length=0;vel=0;stage.classList.remove('cutting');stage.classList.add('grabbing');}
+cv.addEventListener('pointerdown',e=>{if(!running||paused)return;try{cv.setPointerCapture(e.pointerId);}catch(err){}
+ if(BOT.on)BOT.toggle();const p=stagePt(e);ptrs.set(e.pointerId,p);e.preventDefault();
+ if(e.pointerType==='mouse'){ /* мышь: 0 — левая (рез), 2 — правая (вращение), средняя — тоже вращение */
+  if(e.button===0)startCut(e.pointerId,p);else if(e.button===2||e.button===1)startRot([e.pointerId]);return;}
+ /* палец / перо */
+ const touches=[...ptrs.keys()];
+ if(touches.length>=2){startRot(touches);} /* второй палец лёг — начатый рез отменяется, вращаем */
+ else if(e.button===2||e.button===5)startRot([e.pointerId]); /* кнопка на пере — вращение */
+ else startCut(e.pointerId,p);});
+/* скорость за последние ~70 мс (версия 02) — только для силы разлёта половинок */
+function recentSpeed(){const pts=g.pts,last=pts[pts.length-1];if(pts.length<2)return 0;let k=pts.length-2; /* минимум один отрезок — иначе при редких событиях скорость «0» */
+ while(k>0&&last.t-pts[k-1].t<70)k--;const a=pts[k];return Math.hypot(last.x-a.x,last.y-a.y)/Math.max(1,last.t-a.t);}
+addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const p=stagePt(e);ptrs.set(e.pointerId,p);if(!g||!g.ids.includes(e.pointerId))return;
+ if(g.mode==='rot'){const c=centroid(g.ids);if(!c)return;const dx=c.x-g.last.x,dy=c.y-g.last.y;
+  angle+=dx*CFG.ROT_K;vel=dx*CFG.ROT_K;tiltX=Math.max(-CFG.TILT_MAX,Math.min(CFG.TILT_MAX,tiltX+dy*CFG.TILT_K));
+  g.peak=Math.max(g.peak,Math.hypot(dx,dy)/Math.max(1,c.t-g.t));g.last=c;g.t=c.t;if(Math.abs(dx)+Math.abs(dy)>2)hideCue();return;}
+ /* рез */
+ const dx=p.x-g.last.x,dy=p.y-g.last.y;g.pts.push(p);if(g.pts.length>40)g.pts.shift();
+ const spNow=Math.hypot(dx,dy)/Math.max(1,p.t-g.last.t);if(spNow>g.peak)g.peak=spNow;
+ g.moved=Math.max(g.moved,Math.hypot(p.x-g.x0,p.y-g.y0));trail.push(p);g.maxSp=Math.max(g.maxSp,recentSpeed());
+ if(!g.done){slashSample(g.last.x,g.last.y,p.x,p.y);if(g.moved>=CFG.CUT_MIN)maybeCommit(p.x,p.y);}
+ g.last=p;});
+/* рез (версия 02): по пути движения собираем ягоды, через которые он прошёл; побеждает та, чей центр ближе к линии
+   (расстояние нормировано на радиус) — в плотной грозди случайно задетые соседи не засчитываются */
+function pickAt(x,y){let best=null;for(const o of berries){if(!o.alive||o.layer!==layer||o.state==='dying'||o.sr<=0)continue;
+ const d=Math.hypot(x-o.sx,y-o.sy);if(d<=o.sr*.98&&(!best||o.sz>best.sz))best=o;}return best;}
+function slashSample(x1,y1,x2,y2){const len=Math.hypot(x2-x1,y2-y1),n=Math.max(1,Math.ceil(len/4));
+ for(let i=0;i<=n;i++){const x=x1+(x2-x1)*i/n,y=y1+(y2-y1)*i/n,b=pickAt(x,y);if(!b)continue;
+  const d=Math.hypot(x-b.sx,y-b.sy)/Math.max(1,b.sr);const c=g.cands.get(b);if(!c)g.cands.set(b,{d,order:g.cands.size});else if(d<c.d)c.d=d;}}
+function bestCand(){let best=null,bd=1e9,bo=1e9;g.cands.forEach((c,b)=>{if(c.d<bd-1e-6||(Math.abs(c.d-bd)<=1e-6&&c.order<bo)){bd=c.d;bo=c.order;best=b;}});return best?{b:best,d:bd}:null;}
+function commitSlash(x,y){if(g.done)return;g.done=true;const c=bestCand();
+ if(!c){S.whoosh();return;}
+ if(locked)return;
+ let ang=Math.atan2(y-g.y0,x-g.x0);if(Math.hypot(x-g.x0,y-g.y0)<CFG.CUT_MIN)ang=0;
+ cutGesture(c.b,ang,g.maxSp,c.b.sx,c.b.sy);}
+/* ранний коммит: палец вышел из контура лучшей ягоды, через центр которой прошёл (d<0.45) */
+function maybeCommit(x,y){const c=bestCand();if(!c||c.d>=.45)return;if(Math.hypot(x-c.b.sx,y-c.b.sy)>c.b.sr*1.25)commitSlash(x,y);}
+function endG(e){if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
+ if(g&&g.ids.includes(e.pointerId)){
+  if(g.mode==='cut'){if(!g.done&&g.moved>=CFG.CUT_MIN)commitSlash(g.last.x,g.last.y);
+   if(g.moved>=CFG.CUT_MIN){GLOG.push({m:'cut',pk:g.peak,hit:g.done&&g.cands.size>0});}}
+  else{GLOG.push({m:'rot',pk:g.peak,hit:false,n:g.n});if(now()-g.t>120)vel=0; /* палец замер — не бросаем */}
+  if(GLOG.length>14)GLOG.shift();
+  g=null; /* оставшийся после двухпальцевого вращения палец ничего не делает до нового касания */
+ }
+ if(!ptrs.size)stage.classList.remove('grabbing','cutting');}
+addEventListener('pointerup',endG);addEventListener('pointercancel',endG);
+/* попадание отрезка в спроецированные круги ягод активного слоя; берём ближайшую к камере */
+function hitTest(a,b){const hits=[];
+ for(const o of berries){if(!o.alive||o.layer!==layer||o.state==='dying'||o.sr<=0)continue;
+  const t=segEnter(a.x,a.y,b.x,b.y,o.sx,o.sy,o.sr*.98);if(t>=0)hits.push({o,t});}
+ if(!hits.length)return null;
+ /* первая ягода, в которую вошёл нож; при почти одновременном касании — ближняя к камере */
+ hits.sort((p,q)=>p.t-q.t);const t0=hits[0].t;let best=hits[0].o;
+ for(const h of hits){if(h.t-t0>.15)break;if(h.o.sz>best.sz)best=h.o;}
+ return best;}
+/* параметр t∈[0,1] входа отрезка в круг, -1 если не задевает; старт внутри круга → 0 */
+function segEnter(x1,y1,x2,y2,px,py,r){const dx=x2-x1,dy=y2-y1,fx=x1-px,fy=y1-py;const c=fx*fx+fy*fy-r*r;if(c<=0)return 0;
+ const a=dx*dx+dy*dy||1e-6,b=2*(fx*dx+fy*dy),D=b*b-4*a*c;if(D<0)return -1;const t=(-b-Math.sqrt(D))/(2*a);return (t>=0&&t<=1)?t:-1;}
+/* кнопки подкрутки, как в Мат-Бум */
+$('bL').onclick=()=>{S.click();vel=-6;};$('bR').onclick=()=>{S.click();vel=6;};
+$('bU').onclick=()=>{S.click();tiltX=Math.max(-CFG.TILT_MAX,tiltX-10);};$('bD').onclick=()=>{S.click();tiltX=Math.min(CFG.TILT_MAX,tiltX+10);};
+addEventListener('keydown',e=>{
+ if(e.key==='Enter'||e.key===' '){ /* Enter в окнах: продолжить / дальше */
+  if($('ov-win').classList.contains('on')){e.preventDefault();($('w-next').hidden?$('w-again'):$('w-next')).click();return;}
+  if($('ov-pause').classList.contains('on')&&e.key==='Enter'){$('p-resume').click();return;}}
+ if(!running||paused)return;
+ if(e.key==='ArrowLeft')vel=-6;if(e.key==='ArrowRight')vel=6;
+ if(e.key==='ArrowUp')tiltX=Math.max(-CFG.TILT_MAX,tiltX-4);if(e.key==='ArrowDown')tiltX=Math.min(CFG.TILT_MAX,tiltX+4);
+ if(e.key==='Escape')togglePause();});
+
+/* =============== панель настройки: живая правка CFG, сохраняется в localStorage vb_tune =============== */
+/* тема: localStorage vb_theme, по умолчанию тёмная (как в концепции) */
+let THEME='dark';try{THEME=localStorage.getItem('vb_theme')||'dark';}catch(e){}
+function applyTheme(){document.documentElement.setAttribute('data-theme',THEME);$('btn-theme').textContent=THEME==='light'?'☾':'☀';
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEME==='light'?'#f3f0e4':'#0b1410';setTimeout(applyScene,0);}
+$('btn-theme').onclick=()=>{S.click();THEME=THEME==='light'?'dark':'light';try{localStorage.setItem('vb_theme',THEME);}catch(e){}applyTheme();};
+applyTheme();
+const GLOG=[]; /* последние жесты: режим, скорость в момент решения, пик — для подбора порога */
+const TUNE={keys:[['min','CUT_MIN',0],['size','SIZE_MUL',2],['rot','ROT_K',2],['damp','DAMP',2],['bg','BG_PAR',2]],def:{},
+ init(){this.keys.forEach(([id,k])=>this.def[k]=CFG[k]);
+  try{const sv=JSON.parse(localStorage.getItem('vb_tune')||'{}');this.keys.forEach(([id,k])=>{if(typeof sv[k]==='number')CFG[k]=sv[k];});}catch(e){}
+  this.keys.forEach(([id,k,d])=>{const r=$('r-'+id);r.value=CFG[k];r.oninput=()=>{CFG[k]=+r.value;this.sync();this.save();};});this.sync();},
+ sync(){this.keys.forEach(([id,k,d])=>{$('r-'+id).value=CFG[k];$('v-'+id).textContent=(+CFG[k]).toFixed(d);});
+  $('tuneLine').textContent=this.keys.map(([id,k,d])=>k+'='+(+CFG[k]).toFixed(d)).join('  ')+'  fps='+fpsShown+' dpr='+DPR.toFixed(2)+' '+W+'x'+H;
+  const rot=GLOG.filter(x=>x.m==='rot').map(x=>x.pk.toFixed(2)),cut=GLOG.filter(x=>x.m==='cut').map(x=>x.pk.toFixed(2)+(x.hit?'':'·'));
+  $('gestLine').textContent=T('gRot')+' '+(rot.join(' ')||'—')+'\n'+T('gCut')+' '+(cut.join(' ')||'—');},
+ save(){try{const o={};this.keys.forEach(([id,k])=>o[k]=CFG[k]);localStorage.setItem('vb_tune',JSON.stringify(o));}catch(e){}},
+ reset(){this.keys.forEach(([id,k])=>CFG[k]=this.def[k]);this.sync();try{localStorage.removeItem('vb_tune');}catch(e){}}};
+$('p-tune').onclick=()=>{S.click();TUNE.sync();$('ov-pause').classList.remove('on');$('ov-tune').classList.add('on');};
+$('t-back').onclick=()=>{S.click();$('ov-tune').classList.remove('on');$('ov-pause').classList.add('on');};
+$('t-reset').onclick=()=>{S.click();TUNE.reset();};
+$('t-copy').onclick=()=>{S.click();const t=$('tuneLine').textContent+'\n'+$('gestLine').textContent;if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});
+ const b=$('t-copy');b.textContent='✓';setTimeout(()=>b.textContent=T('tCopy'),900);};
+
+/* =============== авто-бот: сам находит нужную ягоду, доворачивает гроздь и «режет» синтетическим свайпом =============== */
+const BOT={on:false,t:0,target:null,phase:'idle',swipe:null,
+ toggle(){this.on=!this.on;this.t=0;this.phase='idle';this.target=null;$('bAuto').classList.toggle('on',this.on);if(this.on){hideCue();stats.auto=true;}},
+ pickTarget(){const tn=now();const L=activeBerries().filter(b=>b.state==='idle'&&!(b.botSkip>tn));
+  const ice=L.find(b=>b.special==='ice'),gold=L.find(b=>b.special==='gold');
+  const ar=angle*Math.PI/180,face=b=>-b.pos[0]*Math.sin(ar)+b.pos[2]*Math.cos(ar);
+  /* v0.8: фаза заказа — только подходящие под открытые слоты; золотая, если подходящих нет */
+  if(order){let c=L.filter(b=>!b.special&&findMatchingSlot(b));if(!c.length)return gold||null;
+   c.sort((p,q)=>(q.over-p.over)||(face(q)-face(p)));return c[0];}
+  /* свободная фаза: ледяная — когда перезрелых много; золотая — всегда полезна; затем самые перезрелые, ближе к «лицу» */
+  if(ice&&L.filter(b=>b.over===2).length>=2)return ice;
+  if(gold)return gold;
+  const c=L.filter(b=>!b.special&&b.ripe===2);if(!c.length)return null;
+  c.sort((p,q)=>(q.over-p.over)||(face(q)-face(p)));
+  return c[0];},
+ tick(dt){if(!this.on||!running||paused||locked||g)return;this.t+=dt;
+  if(this.phase==='idle'){if(this.t<.6)return;this.target=this.pickTarget();if(!this.target){this.t=0;return;}
+   /* угол, при котором ягода смотрит в камеру */
+   const b=this.target;this.goal=Math.atan2(-b.pos[0],b.pos[2])*180/Math.PI;this.phase='turn';this.t=0;return;}
+  if(this.phase==='turn'){let d=((this.goal-angle+540)%360)-180;angle+=d*Math.min(1,dt*4);vel=0;tiltX+=(8-tiltX)*dt*3;
+   if(Math.abs(d)<2||this.t>1.5){const b=this.target;
+    /* ягода перекрыта другой — не режем вслепую, выбираем другую */
+    if(hitTest({x:b.sx-1,y:b.sy},{x:b.sx+1,y:b.sy})!==b){b.botSkip=now()+4000;this.phase='idle';this.t=.4;return;}
+    this.phase='swipe';this.t=0;const a=(pick([0,22.5,67.5,90,112.5,157.5])+rnd(8)-4)*Math.PI/180; /* v0.7: случайное из 6 положений раскола */
+    this.swipe={x:b.sx-Math.cos(a)*b.sr*.85,y:b.sy-Math.sin(a)*b.sr*.85,dx:Math.cos(a)*b.sr*1.7,dy:Math.sin(a)*b.sr*1.7,k:0,done:false};}
+   return;}
+  if(this.phase==='swipe'){const sw=this.swipe;const k0=sw.k;sw.k=Math.min(1,sw.k+dt*7);
+   const p0={x:sw.x+sw.dx*k0,y:sw.y+sw.dy*k0},p1={x:sw.x+sw.dx*sw.k,y:sw.y+sw.dy*sw.k,t:now()};trail.push(p1);
+   if(!sw.done){const hit=hitTest(p0,p1);if(hit){sw.done=true;cutGesture(hit,Math.atan2(sw.dy,sw.dx),2.5,hit.sx,hit.sy);}}
+   if(sw.k>=1){if(!sw.done)S.whoosh();this.phase='idle';this.t=0;}}
+ }};
+$('bAuto').onclick=()=>{S.click();BOT.toggle();};
+
+/* =============== кадр =============== */
+let lastT=0;
+function frame(t){requestAnimationFrame(frame);
+ const dt=Math.min(.05,(t-lastT)/1000||.016);lastT=t;
+ if(!running||paused||glLost)return;
+ if(!g||g.mode!=='rot'){angle+=vel;vel*=CFG.DAMP;if(Math.abs(vel)<.01)vel=0;}
+ const tn=now(),ts=t/1000;
+ /* анимации состояний */
+ for(const b of berries){
+  if(b.state==='closed'&&tn>=b.closedUntil)b.state='idle';
+  b.flash=Math.max(0,b.flash-dt*2.2);
+  b.sc+=(b.tsc-b.sc)*Math.min(1,dt*6);
+  if(b.twk>b.wk){b.wk=Math.min(1,b.wk+dt*1.6);const k=1-Math.pow(1-b.wk,3);for(let i=0;i<3;i++)b.pos[i]=b.sleep[i]+(b.wake[i]-b.sleep[i])*k;}
+  if(b.state==='dying'){b.dieT+=dt;b.alpha=Math.max(0,1-b.dieT/.5);b.sc*=1-dt*2.5;if(b.dieT>=.5){b.alive=false;b.state='gone';}}
+ }
+ /* матрицы */
+ const asp=W/H,Pm=mPersp(CFG.FOV,asp,1,100);
+ let shx=0,shy=0;if(shakeT>0){shakeT-=dt;shx=(rnd(2)-1)*.08*shakeT*2;shy=(rnd(2)-1)*.08*shakeT*2;}
+ const view=mTrans(shx,shy,-camD);
+ /* v0.7: едва заметное качание, как на ветру — маятник вокруг верха ножки */
+ let swY=0,swX=0,swZ=0;if(!REDUCED){const tw=ts;swY=Math.sin(tw*.6)*1.3;swX=Math.sin(tw*.83+1.)*.8;swZ=Math.sin(tw*.47+2.)*1.1;}
+ const top=CONE_H/2+1.2,swM=mMul(mTrans(0,top,0),mMul(mRotZ(swZ*Math.PI/180),mTrans(0,-top,0)));
+ const VM=mMul(view,mMul(swM,mMul(mRotX((tiltX+swX)*Math.PI/180),mRotY((angle+swY)*Math.PI/180))));
+ const f=1/Math.tan(CFG.FOV/2);
+ gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ drawSky(asp); /* v0.5: морская панорама, повёрнутая вместе с гроздью */
+ gl.uniformMatrix4fv(U.uP,false,Pm);gl.uniform1f(U.uTime,ts);gl.uniform3fv(U.uFlesh,LVL.flesh);gl.uniform1f(U.uShape,LVL.shape||0);
+ const opaque=[],trans=[];
+ for(const b of berries){if(!b.alive&&b.state!=='dying')continue;
+  const MV=mMul(VM,mMul(mTrans(b.pos[0],b.pos[1],b.pos[2]),b.Rb));b.MV=MV;
+  const s=.5*(LVL.size||1)*CFG.SIZE_MUL*b.sc*(b.layer===layer?1:.6+.4*b.wk);const th=LVL.thin||1;b.scale=[s*th,s*LVL.elong,s*th];
+  const cx=MV[12],cy=MV[13],cz=MV[14];b.cz=cz;
+  /* экранная проекция для попадания (CSS px) */
+  const iz=1/(-cz);b.sx=(cx*f/asp*iz*.5+.5)*W;b.sy=(1-(cy*f*iz*.5+.5))*H;b.sr=s*f*iz*H*.5*(1+(LVL.elong-1)*.4);b.sz=cz;
+  (b.alpha<1?trans:opaque).push(b);}
+ gl.enable(gl.CULL_FACE);gl.depthMask(true);
+ const drawB=b=>{gl.uniformMatrix4fv(U.uMV,false,b.MV);gl.uniformMatrix3fv(U.uNM,false,m3(b.MV));gl.uniform3fv(U.uScale,b.scale);
+  gl.uniform3fv(U.uCol,b.col);gl.uniform1f(U.uRipe,b.ripe);gl.uniform1f(U.uFeat,b.layer===layer&&!b.special?b.feat+1:0);
+  gl.uniform1f(U.uMode,b.layer!==layer&&b.wk<.5?1:(b.state==='closed'?2:(b.rot?3:0)));gl.uniform1f(U.uFlash,b.flash);
+  gl.uniform3f(U.uExtra,b.special==='gold'?1:(b.special==='ice'?2:0),b.over,b.frozen>0?1:0);
+  gl.uniform1f(U.uAlpha,b.alpha);gl.uniform4f(U.uClip,0,0,0,0);gl.uniform1f(U.uSeed,b.seed);gl.uniform3f(U.uCenter,b.MV[12],b.MV[13],b.MV[14]);
+  gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);};
+ opaque.forEach(drawB);
+ /* плодоножки: тонкая ножка от каждой ягоды активного слоя к оси грозди (+1 крошечный draw на ягоду) */
+ {gl.uniform1f(U.uShape,0);gl.uniform3f(U.uExtra,0,0,0);gl.uniform3f(U.uCol,.42,.47,.22);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);gl.uniform1f(U.uAlpha,1);gl.uniform4f(U.uClip,0,0,0,0);
+  for(const b of berries){if(b.layer!==layer||!b.alive||b.state==='dying'||b.wk<1)continue;
+   const px=b.pos[0],py=b.pos[1],pz=b.pos[2];const tx=0,ty=py+.5,tz=0;
+   const dx=tx-px,dy=ty-py,dz=tz-pz;const len=Math.hypot(dx,dy,dz);if(len<.2)continue;
+   const nx=dx/len,ny=dy/len,nz=dz/len;const ax=[nz,0,-nx];const al=Math.hypot(ax[0],ax[2])||1;ax[0]/=al;ax[2]/=al;
+   const ang=Math.acos(Math.max(-1,Math.min(1,ny)));
+   const MV=mMul(VM,mMul(mTrans((px+tx)/2,(py+ty)/2,(pz+tz)/2),mRotAxis(ax,ang)));
+   gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,.03,len*.5,.03);gl.uniform3f(U.uCenter,MV[12],MV[13],MV[14]);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);}
+  gl.uniform1f(U.uShape,LVL.shape||0);}
+ /* ножка */
+ {gl.uniform1f(U.uShape,0);gl.uniform3f(U.uExtra,0,0,0);const MV=mMul(VM,mTrans(0,CONE_H/2+.75,0));gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,.09,.5,.09);
+  gl.uniform3f(U.uCol,.45,.34,.2);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);gl.uniform1f(U.uAlpha,1);gl.uniform4f(U.uClip,0,0,0,0);
+  gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);gl.uniform1f(U.uShape,LVL.shape||0);}
+ /* полупрозрачные: растворяющиеся ягоды */
+ gl.depthMask(false);trans.sort((a,b)=>a.cz-b.cz).forEach(drawB);
+ /* половинки — поверх грозди (свой буфер глубины), с лёгким вылетом на зрителя: механизм версии 02 */
+ if(halves.length){gl.clear(gl.DEPTH_BUFFER_BIT);gl.depthMask(true);gl.disable(gl.CULL_FACE);
+  const tnow=now();
+  halves=halves.filter(h=>{const p=(tnow-h.t0)/h.dur;if(p>=1)return false;
+   const b=h.b,dist=(0.35+0.9*h.speed)*easeOut(p);
+   const off=[h.nW[0]*h.side*dist,h.nW[1]*h.side*dist-0.9*p*p,h.nW[2]*h.side*dist+0.8*easeOut(p)];
+   const Rt=mMul(mRotAxis(h.axisW,-h.side*(1.1+1.4*h.speed)*p),h.R0);
+   const k=1-.7*smooth(.3,1,p),alpha=1-smooth(.5,1,p);
+   const MV=mMul(mTrans(h.p0[0]+off[0],h.p0[1]+off[1],h.p0[2]+off[2]),Rt);
+   const sx=b.scale[0]*k,sy=b.scale[1]*k,sz=b.scale[2]*k;
+   /* оболочка половинки (отсечение плоскостью) */
+   gl.uniformMatrix4fv(U.uMV,false,MV);gl.uniformMatrix3fv(U.uNM,false,m3(MV));gl.uniform3f(U.uScale,sx,sy,sz);
+   gl.uniform3fv(U.uCol,b.col);gl.uniform1f(U.uRipe,2);gl.uniform1f(U.uFeat,b.special?0:b.feat+1);gl.uniform1f(U.uMode,0);gl.uniform1f(U.uFlash,0);
+   gl.uniform3f(U.uExtra,b.special==='gold'?1:(b.special==='ice'?2:0),b.over,0);gl.uniform1f(U.uAlpha,alpha);gl.uniform4fv(U.uClip,h.clip);gl.uniform1f(U.uSeed,b.seed);gl.uniform3f(U.uCenter,MV[12],MV[13],MV[14]);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);
+   /* диск-срез (мякоть) в плоскости реза: сплющенная сфера, повёрнутая z→нормаль, чуть сдвинутая в сторону своей половинки */
+   const n=h.no,ref=Math.abs(n[2])<.9?[0,0,1]:[1,0,0];
+   let u=[n[1]*ref[2]-n[2]*ref[1],n[2]*ref[0]-n[0]*ref[2],n[0]*ref[1]-n[1]*ref[0]];let ul=Math.hypot(...u)||1;u=u.map(v=>v/ul);
+   const v=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]];
+   const Rd=new Float32Array([u[0],u[1],u[2],0, v[0],v[1],v[2],0, n[0],n[1],n[2],0, 0,0,0,1]);
+   const Md=mMul(MV,mMul(mScale(sx,sy,sz),mMul(mTrans(n[0]*h.side*.012,n[1]*h.side*.012,n[2]*h.side*.012),mMul(Rd,mScale(.985,.985,.02)))));
+   gl.uniformMatrix4fv(U.uMV,false,Md);gl.uniformMatrix3fv(U.uNM,false,m3(Md));gl.uniform3f(U.uScale,1,1,1);gl.uniform1f(U.uShape,0);
+   gl.uniform3fv(U.uCol,LVL.flesh);gl.uniform1f(U.uRipe,1);gl.uniform1f(U.uFeat,0);gl.uniform4f(U.uClip,0,0,0,0);gl.uniform3f(U.uExtra,0,0,0);
+   gl.drawElements(gl.TRIANGLES,SPH.cnt,gl.UNSIGNED_SHORT,0);gl.uniform1f(U.uShape,LVL.shape||0);
+   return true;});}
+ gl.depthMask(true);
+ BOT.tick(dt);drawFX(dt);dbgTick(dt);TUT.tick();
+ tickTimer(dt);
+}
+/* v0.6: таймер слоя. Обратный отсчёт; на нуле — стресс-режим: ягоды перезревают каждые STRESS_MS, экран темнеет, бонус за слой не даётся */
+function tickTimer(dt){const tn=now();if(!TUT.on&&!locked)layerEl+=dt;
+ if(order&&order.timeLimit&&!TUT.on&&!locked){order.timeLeft-=dt;if(order.timeLeft<=0){S.puf();ftext(W/2,H*.3,T('ftOrderBurn'),true,true);orderQueue.unshift(order.spec);newOrder(false);}else updateOrderBar();}const left=Math.ceil(lvLayerT(LVL)-layerEl);const el=$('stTime');
+ if(left>0){el.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');el.style.color=left<=20?'var(--bad)':'';if(stress){stress=false;document.body.classList.remove('stress');}}
+ else{if(!stress){stress=true;_stressWas=true;stressNext=tn+CFG.STRESS_MS;stressBeep=tn;document.body.classList.add('stress');ftext(W/2,H*.3,T('ftStress'),true,true);S.stress();}
+  el.textContent=T('stress');el.style.color='var(--bad)';
+  if(!locked&&tn>=stressNext){stressNext=tn+CFG.STRESS_MS;advanceOverripe();ensureSolvable();updateHUD();}
+  if(tn-stressBeep>2200){stressBeep=tn;S.stress();}}}
+requestAnimationFrame(frame);
+
+/* =============== экраны и кнопки =============== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));$('btn-back').hidden=(id==='scr-start');
+ if(id==='scr-game'){requestAnimationFrame(()=>{resize();});}}
+let cueShown=false;try{cueShown=localStorage.getItem('vb_cue')==='1';}catch(e){}
+let curLvl=0,tutDone=false;try{tutDone=localStorage.getItem('vb_tut')==='1';}catch(e){}
+function startGame(idx,train){if(typeof idx==='number')curLvl=idx;LVL=LEVELS[curLvl];show('scr-game');resize();newGame();running=true;paused=false;$('ov-win').classList.remove('on');
+ gpWanted=true;syncGameplay();
+ const tut=train||(!tutDone&&!Object.keys(PROG.done).length&&curLvl===0);   /* первый запуск — обучение автоматически */
+ if(tut){TUT.start();$('cue').classList.remove('on');}else{TUT.stop();TUT.on=false;$('cue').classList.toggle('on',!cueShown);}}
+function hideCue(){if($('cue').classList.contains('on')){$('cue').classList.remove('on');cueShown=true;try{localStorage.setItem('vb_cue','1');}catch(e){}}}
+function togglePause(force){if(!running)return;paused=force===true?true:!paused;$('ov-pause').classList.toggle('on',paused);
+ if(master)master.gain.value=paused?0:(sndOn?.5:0); /* на паузе (в т.ч. game_api_pause и сворачивание) звук глушится — требование Яндекс Игр */
+ if(paused)tPause=now();else{const d=now()-tPause;tStart+=d;comboUntil+=d;stressNext+=d;for(const b of berries)if(b.state==='closed')b.closedUntil+=d;}syncGameplay();}
+$('b-play').onclick=()=>{S.click();startGame(nextLevelIdx());};
+$('b-train').onclick=()=>{S.click();startGame(0,true);};
+$('b-help').onclick=()=>{S.click();show('scr-help');};$('btn-help').onclick=()=>{S.click();if(running&&!paused)togglePause();$('ov-pause').classList.remove('on');show('scr-help');};
+function openHall(){const L=$('hallList');L.innerHTML='';let n=0;
+ LEVELS.forEach((l,i)=>{const r=PROG.done[l.n];if(!r)return;n++;const d=document.createElement('div');d.className='hallrow';
+  const mm=Math.floor(r.time/60)+':'+String(r.time%60).padStart(2,'0');
+  d.innerHTML='<span class="rk">'+l.n+'</span><span class="nm">'+lvName(l)+(r.auto?' <span class="ex">'+T('hallAuto')+'</span>':'')+'</span><span class="ex">'+mm+' · ✂'+r.cuts+' · ✗'+r.mist+'</span><span class="sc">'+(r.auto?'—':T('hallPts',{n:lvScore(r)}))+'</span>';L.appendChild(d);});
+ if(!n){const d=document.createElement('div');d.className='hallrow empty';d.textContent=T('hallEmpty');L.appendChild(d);}
+ $('hallTotal').textContent=T('hallTotal',{n:totalScore(),a:n,b:LEVELS.length});
+ const ya=$('hallYa');ya.innerHTML='';show('scr-hall');
+ lbTop(5).then(list=>{if(!list||!list.length)return;ya.innerHTML='<h3>'+T('hallOnline')+'</h3>';
+  list.forEach((e,i)=>{const d=document.createElement('div');d.className='hallrow';d.style.gridTemplateColumns='28px 1fr auto';
+   d.innerHTML='<span class="rk">'+(i+1)+'</span><span class="nm">'+String(e.name).replace(/[<>&]/g,'')+'</span><span class="sc">'+e.score+'</span>';ya.appendChild(d);});});}
+$('b-hall').onclick=()=>{S.click();openHall();};
+$('hall-back').onclick=()=>{S.click();show('scr-start');};
+$('help-back').onclick=()=>{S.click();show(running?'scr-game':'scr-start');if(running&&paused)$('ov-pause').classList.add('on');};
+$('btn-back').onclick=()=>{S.click();running=false;paused=false;syncGameplay();if(TUT.on)TUT.stop();$('ov-pause').classList.remove('on');show('scr-start');};
+$('bPause').onclick=()=>{S.click();togglePause();};$('p-resume').onclick=()=>{togglePause();S.click();};
+$('p-exit').onclick=()=>{S.click();running=false;paused=false;syncGameplay();if(TUT.on)TUT.stop();$('ov-pause').classList.remove('on');show('scr-start');};
+$('w-again').onclick=()=>{S.click();showInterstitial().then(()=>startGame());};
+$('w-next').onclick=()=>{S.click();showInterstitial().then(()=>startGame(Math.min(LEVELS.length-1,curLvl+1)));};$('w-menu').onclick=()=>{S.click();$('ov-win').classList.remove('on');show('scr-start');};
+$('btn-sound').onclick=()=>{setSound(!sndOn);S.click();};setSound(sndOn);
+$('btn-lang').onclick=()=>{S.click();setLang(LANG==='ru'?'en':'ru');};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)togglePause();});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+/* сетка выбора грозди: все 10 открыты (техно-демо), пройденные — с галочкой и лучшим временем */
+function lvName(l){return LANG==='en'&&l.en?l.en:l.name;}
+function fmtT(t){return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+function buildGrid(){const g=$('colgrid');g.innerHTML='';const nx=nextLevelIdx();
+ LEVELS.forEach((l,i)=>{const d=document.createElement('div');const rec=PROG.done[l.n];
+  d.className='lvcard'+(rec?' done':'')+(i===nx?' next':'');d.tabIndex=0;d.setAttribute('role','button');d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();d.click();}};
+  let pv='';for(let k=0;k<4;k++){const c=l.cols[k%l.cols.length];const m=[.75,1,.9,.7][k];
+   pv+=`<div class="pv" style="background:rgb(${c[0]*255*m|0},${c[1]*255*m|0},${c[2]*255*m|0});height:${26*l.elong|0}px"></div>`;}
+  d.innerHTML=`<span class="num">${l.n}</span>${rec?'<span class="ok">✓</span>':''}<div class="pvw">${pv}</div><div class="nm">${lvName(l)}</div>
+   <div class="ft">${l.feats.map(f=>FEATS[f].svg).join('')}</div><div class="best">${rec?(rec.auto?'⚡ ':'')+T('best',{t:fmtT(rec.time)}):''}</div>`;
+  d.onclick=()=>{S.click();startGame(i);};g.appendChild(d);});
+ const n=Object.keys(PROG.done).length;$('progLine').innerHTML=T('progLine',{n,m:LEVELS.length})+'<br><span style="opacity:.6">v'+VERSION+'</span>';}
+applyLang();
+/* отладка для теста на телефоне: ?debug в адресе или 5 тапов по ВРЕМЯ — FPS, DPR, число объектов */
+let dbgOn=/[?&]debug/.test(location.search),dbgTaps=0,fpsAcc=0,fpsN=0,fpsShown=0,slowAcc=0,qualityDropped=false;
+$('dbg').classList.toggle('on',dbgOn);
+$('stTime').parentElement.addEventListener('click',()=>{if(++dbgTaps>=5){dbgTaps=0;dbgOn=!dbgOn;$('dbg').classList.toggle('on',dbgOn);}});
+function dbgTick(dt){fpsAcc+=dt;fpsN++;
+ /* автоснижение качества: если кадр стабильно дольше 28 мс — DPR→1 (один раз, как у Грави-Бума на телефоне) */
+ if(dt>.028)slowAcc+=dt;else slowAcc=Math.max(0,slowAcc-dt*.5);
+ if(slowAcc>2&&!qualityDropped&&DPR>1){qualityDropped=true;DPR_CAP=1;resize();}
+ if(fpsAcc>=.5){fpsShown=Math.round(fpsN/fpsAcc);fpsAcc=0;fpsN=0;
+  const lg=GLOG[GLOG.length-1];if(dbgOn)$('dbg').textContent=`v${VERSION}  fps ${fpsShown}  dpr ${DPR.toFixed(2)}${qualityDropped?' (снижено)':''}${lg?`  жест: ${lg.m==='cut'?'РЕЗ':'вращ'+(lg.n>1?'×'+lg.n:'')} пик ${lg.pk.toFixed(2)}`:''}\nягод ${berries.filter(b=>b.alive).length}  половинок ${halves.length}  частиц ${P.length}\n${W}x${H}  ягода ${unitPx|0}px  ${MOBILE?'mobile':'desktop'}`;}}
+TUNE.init();resize();initPlatform();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
